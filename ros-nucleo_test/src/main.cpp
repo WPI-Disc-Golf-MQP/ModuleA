@@ -13,9 +13,9 @@ int SPEED_PIN = A0;
 int INVERT_PIN = D13;
 
 // intake feedback
-std_msgs::Bool feedback_msg;
-String _feedback_topic(NODE_NAME + "_feedback__intake");
-ros::Publisher feedback_pub(_feedback_topic.c_str(), &feedback_msg);
+std_msgs::Bool intake_state_msg;
+String _intake_state_topic(NODE_NAME + "_feedback__intake_state");
+ros::Publisher intake_state_pub(_intake_state_topic.c_str(), &intake_state_msg);
 
 enum INTAKE_STATE {
   INTAKE_IDLE = 0,
@@ -48,7 +48,7 @@ bool beam_broken() {
   return (digitalRead(BEAM_BREAK_PIN) == 0);
 }
 
-bool verify_intake_complete() {
+bool verify_motion_complete() {
   return intake_state == INTAKE_STATE::INTAKE_IDLE;
 }
 
@@ -89,19 +89,26 @@ void check_intake() {
       } 
       break;
   }
+
+
+  // publish state to pi 
+  if (intake_state_msg.data != (int) intake_state) {
+      intake_state_msg.data = intake_state;
+      loginfo("publishing conveyor state");
+      intake_state_pub.publish(&intake_state_msg);
+  }
 }
 
 
 void setup() {
   init_std_node();
-  nh.advertise(feedback_pub);
+  nh.advertise(intake_state_pub);
   set_request_callbacks(
-    // std::bind(set_led, true), 
-    // get_led, 
-    // std::bind(set_led, true), 
-    // get_led, 
-    // std::bind(set_led, false)
-    );
+    [] () {},
+    [] () {return true;},
+    start_intake,
+    verify_motion_complete,
+    stop);
 
   // intake pins 
   pinMode(BEAM_BREAK_PIN, INPUT_PULLUP) ;
@@ -117,12 +124,10 @@ void loop() {
   delay(10);
   check_intake();
 
-
-    // ----- testing ----- 
-  if (verify_intake_complete()) {
-    Serial.println("farts");
-    delay(5000);
-    start_intake();
-  }
-
+  // ----- testing ----- 
+  // if (verify_motion_complete()) {
+  //   loginfo("debugging test reset");
+  //   delay(5000);
+  //   start_intake();
+  // }
 }
