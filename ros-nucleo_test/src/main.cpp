@@ -122,12 +122,20 @@ void loop() {
   periodic_status();
   nh.spinOnce();
   delay(10);
+
+
+
+
   check_intake();
 
-  // ----- testing ----- 
+  // //----- testing ----- 
   // if (verify_motion_complete()) {
   //   loginfo("debugging test reset");
   //   delay(5000);
   //   start_intake();
   // }
+
+
+  // move_forward();
+
 }
