@@ -98,47 +98,47 @@ void check_intake() {
   }
 }
 
-// ----- CAMERA TURNTABLE ----- 
-std_msgs::Bool turntable_state_msg;
-String _turntable_state_topic(NODE_NAME + "_feedback__intake_state");
-ros::Publisher turntable_state_pub(_turntable_state_topic.c_str(), &turntable_state_msg);
+// // ----- CAMERA TURNTABLE ----- 
+// std_msgs::Bool turntable_state_msg;
+// String _turntable_state_topic(NODE_NAME + "_feedback__intake_state");
+// ros::Publisher turntable_state_pub(_turntable_state_topic.c_str(), &turntable_state_msg);
 
-enum TURNTABLE_STATE {
-  TURNTABLE_IDLE = 0,
-  TURNTABLE_RAISING = 1,
-  TURNTABLE_SPINNING = 2,
-  TURNTABLE_LOWERING = 3
-};
-TURNTABLE_STATE turntable_state = TURNTABLE_STATE::TURNTABLE_IDLE;
+// enum TURNTABLE_STATE {
+//   TURNTABLE_IDLE = 0,
+//   TURNTABLE_RAISING = 1,
+//   TURNTABLE_SPINNING = 2,
+//   TURNTABLE_LOWERING = 3
+// };
+// TURNTABLE_STATE turntable_state = TURNTABLE_STATE::TURNTABLE_IDLE;
 
 
-void check_turntable() {
+// void check_turntable() {
 
   
 
 
-  switch (turntable_state) {
-    case TURNTABLE_STATE::TURNTABLE_IDLE:
+//   switch (turntable_state) {
+//     case TURNTABLE_STATE::TURNTABLE_IDLE:
       
-      break;
-    case TURNTABLE_STATE::TURNTABLE_RAISING:
+//       break;
+//     case TURNTABLE_STATE::TURNTABLE_RAISING:
       
-      break;
-    case TURNTABLE_STATE::TURNTABLE_SPINNING:
+//       break;
+//     case TURNTABLE_STATE::TURNTABLE_SPINNING:
       
-      break;
-    case TURNTABLE_STATE::TURNTABLE_LOWERING:
+//       break;
+//     case TURNTABLE_STATE::TURNTABLE_LOWERING:
       
-      break;
-  }
+//       break;
+//   }
 
-  // publish state to pi 
-  if (turntable_state_msg.data != (int) turntable_state) {
-      turntable_state_msg.data = turntable_state;
-      loginfo("publishing turntable state");
-      turntable_state_pub.publish(&turntable_state_msg);
-  }
-};
+//   // publish state to pi 
+//   if (turntable_state_msg.data != (int) turntable_state) {
+//       turntable_state_msg.data = turntable_state;
+//       loginfo("publishing turntable state");
+//       turntable_state_pub.publish(&turntable_state_msg);
+//   }
+// };
 
 
 
@@ -162,22 +162,24 @@ void setup() {
   loginfo("setup() Complete");
 }
 
+// ---- testing ---- 
 void loop() {
-  periodic_status();
-  nh.spinOnce();
-  delay(10);
   check_intake();
-  check_turntable();
+  if (verify_motion_complete()) {
+    loginfo("debugging test reset");
+    delay(5000);
+    start_intake();
+  }
 
-
-  // //----- testing ----- 
-  // check_intake();
-  // if (verify_motion_complete()) {
-  //   loginfo("debugging test reset");
-  //   delay(5000);
-  //   start_intake();
-  // }
-
-  // move_forward(128);
-
+  move_forward(128);
 }
+
+// ---- ros -----
+// void loop() {
+//   periodic_status();
+//   nh.spinOnce();
+//   delay(10);
+//   check_intake();
+//   // check_turntable();
+
+// }
