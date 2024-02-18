@@ -11,9 +11,8 @@
 int BEAM_BREAK_PIN = D2;
 int SPEED_PIN = A0;
 int INVERT_PIN = D13;
-
-
-int step_pin = D1;
+int UPPER_LIMIT_SWITCH_PIN = D4; //NEEDS TO BE CHANGED WHEN WIRED 
+int LOWER_LIMIT_SWITCH_PIN = D5; //NEEDS TO BE CHANGED WHEN WIRED
 
 // intake feedback
 std_msgs::Bool intake_state_msg;
@@ -118,6 +117,11 @@ void check_intake() {
 }
 
 // ----- CAMERA TURNTABLE ----- 
+
+int dir_pin = D11;
+int step_pin = D12;
+int sleep_pin = D6; 
+
 std_msgs::Bool turntable_state_msg;
 String _turntable_state_topic(NODE_NAME + "_feedback__intake_state");
 ros::Publisher turntable_state_pub(_turntable_state_topic.c_str(), &turntable_state_msg);
@@ -132,11 +136,11 @@ TURNTABLE_STATE turntable_state = TURNTABLE_STATE::TURNTABLE_IDLE;
 
 
 bool upper_limit_switched() { // FINISH THIS FUNCTION after wiring
-  return (digitalRead(BEAM_BREAK_PIN) == 0);
+  return (digitalRead(UPPER_LIMIT_SWITCH_PIN) == 0);
 }
 
 bool lower_limit_switched() { // FINISH THIS FUNCTION after wiring
-  return (digitalRead(BEAM_BREAK_PIN) == 0);
+  return (digitalRead(LOWER_LIMIT_SWITCH_PIN) == 0);
 }
 
 bool run_yaxis_motor = false;
@@ -154,21 +158,28 @@ void start_turntable() {
   yaxis_motor_last_step = millis();
 }
 
-bool beam_broken() { 
-  return (digitalRead(BEAM_BREAK_PIN) == 0);
-}
-
 
 void check_turntable() {
 
+  Serial.println(yaxis_motor_last_step);
+
   // drive the motor if the flag has been set to run it // TODO implimet the sleep pin as well 
-  if (yaxis_motor_last_step+2 < millis()) {
-    digitalWrite(step_pin, !yaxis_motor_last_digital_write);
+  if ((yaxis_motor_last_step+100 < millis()) && run_yaxis_motor == true) {
+    Serial.println("triggered correctly");
+    Serial.println(!yaxis_motor_last_digital_write);
+
+    // digitalWrite(step_pin, !yaxis_motor_last_digital_write);
+    digitalWrite(step_pin, HIGH);
+    delay(2);
+    digitalWrite(step_pin, LOW);
+    delay(2); 
+
+
     yaxis_motor_last_digital_write = !yaxis_motor_last_digital_write; 
     yaxis_motor_last_step = millis();
   }
 
-  if (spin_motor_last_step+2 < millis()) {
+  if ((spin_motor_last_step+2 < millis()) && run_spin_motor == true) {
     digitalWrite(step_pin, !spin_motor_last_digital_write);
     spin_motor_last_digital_write = !spin_motor_last_digital_write; 
     spin_motor_last_step = millis();
@@ -181,7 +192,7 @@ void check_turntable() {
       break;
     case TURNTABLE_STATE::TURNTABLE_RAISING:
 
-      if (beam_broken()) {
+      if (upper_limit_switched() == true) {
         run_yaxis_motor = false; 
         turntable_state = TURNTABLE_STATE::TURNTABLE_SPINNING; 
         run_spin_motor = true; 
@@ -190,10 +201,10 @@ void check_turntable() {
       
       break;
     case TURNTABLE_STATE::TURNTABLE_SPINNING:
-       // not sure how to leave this state, when it goes a certain number of steps? or when pi says we got all the pictures... 
+    //TALK TO THE PI TO TAKE PICTURES
       break;
     case TURNTABLE_STATE::TURNTABLE_LOWERING:
-      if (beam_broken()) {
+      if (lower_limit_switched()) {
         run_yaxis_motor = false; 
         run_spin_motor = false; 
         turntable_state = TURNTABLE_STATE::TURNTABLE_IDLE; 
@@ -212,7 +223,7 @@ void check_turntable() {
 
 
 
-// ----- SETUP LOOP -----
+// // ----- SETUP LOOP -----
 
 void setup() {
   init_std_node();
@@ -231,28 +242,54 @@ void setup() {
 
   // camera pins 
   pinMode(step_pin, OUTPUT);
+  pinMode(dir_pin, OUTPUT);
+  pinMode(sleep_pin, OUTPUT);
+
+  digitalWrite(step_pin, LOW);
+  digitalWrite(dir_pin, LOW);
+  digitalWrite(sleep_pin, HIGH);
 
 
   loginfo("setup() Complete");
+
+  Serial.begin(57600);
 }
 
-// // ---- testing ---- 
+// ---- testing ---- 
 // void loop() {
-//   check_intake();
-//   if (verify_motion_complete()) {
-//     loginfo("debugging test reset");
-//     delay(5000);
-//     start_intake();
-//   }
+  // check_intake();
+  // if (verify_motion_complete()) {
+  //   loginfo("debugging test reset");
+  //   delay(5000);
+  //   start_intake();
+  // }
 
-//   move_forward(128);
+  // move_forward(128);  
 // }
 
-// ---- ros -----
-void loop() {
-  periodic_status();
-  nh.spinOnce();
-  delay(10);
-  check_intake();
-  check_turntable();
-}
+
+
+void loop() { 
+  // Serial.println("Starting"); 
+  // // delay(30); 
+  // check_turntable(); 
+  // run_yaxis_motor = true; 
+  // Serial.println(run_yaxis_motor);
+
+
+  digitalWrite(step_pin, HIGH);
+  delay(2);
+  digitalWrite(step_pin, LOW);
+  delay(2);  
+
+} 
+
+// // ---- ros -----
+// void loop() {
+//   periodic_status();
+//   nh.spinOnce();
+//   delay(10);
+//   check_intake();
+//   check_turntable();
+// }
+
