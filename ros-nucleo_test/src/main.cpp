@@ -164,7 +164,7 @@ void check_turntable() {
   Serial.println(yaxis_motor_last_step);
 
   // drive the motor if the flag has been set to run it // TODO implimet the sleep pin as well 
-  if ((yaxis_motor_last_step+100 < millis()) && run_yaxis_motor == true) {
+  if ((yaxis_motor_last_step+2 < millis()) && run_yaxis_motor == true) {
     Serial.println("triggered correctly");
     Serial.println(!yaxis_motor_last_digital_write);
 
@@ -270,18 +270,11 @@ void setup() {
 
 
 void loop() { 
-  // Serial.println("Starting"); 
-  // // delay(30); 
-  // check_turntable(); 
-  // run_yaxis_motor = true; 
-  // Serial.println(run_yaxis_motor);
-
-
-  digitalWrite(step_pin, HIGH);
-  delay(2);
-  digitalWrite(step_pin, LOW);
-  delay(2);  
-
+  Serial.println("Starting"); 
+  // delay(30); 
+  check_turntable(); 
+  run_yaxis_motor = true; 
+  Serial.println(run_yaxis_motor);
 } 
 
 // // ---- ros -----
