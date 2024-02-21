@@ -7,12 +7,11 @@
 
 
 // ----- INTAKE -----  
-
 int BEAM_BREAK_PIN = D2;
-int SPEED_PIN = A0;
-int INVERT_PIN = D13;
-int UPPER_LIMIT_SWITCH_PIN = D4; //NEEDS TO BE CHANGED WHEN WIRED 
-int LOWER_LIMIT_SWITCH_PIN = D5; //NEEDS TO BE CHANGED WHEN WIRED
+int INTAKE_SPEED_PIN = A0;
+int INTAKE_INVERT_PIN = D13;
+int UPPER_SPEED_PIN = A1;
+int UPPER_INVERT_PIN = D6;
 
 // intake feedback
 std_msgs::Bool intake_state_msg;
@@ -32,21 +31,21 @@ long moved_to_INTAKE_RELEASE_time = millis();
 bool deposited_disc = false; // flag if this instance of calling the start function has yet deposited a disc
 
 void intake_motor_move_forward(int speed = 230) {
-  digitalWrite(INVERT_PIN, LOW);
-  analogWrite(SPEED_PIN, speed); // start
+  digitalWrite(INTAKE_INVERT_PIN, LOW);
+  analogWrite(INTAKE_SPEED_PIN, speed); // start
 }
 
 void intake_motor_stop() {
-  analogWrite(SPEED_PIN, 0); // stop
+  analogWrite(INTAKE_SPEED_PIN, 0); // stop
 }
 
 void top_motor_move_forward(int speed = 230) { // FINISH THIS FUNCTION after wiring
-  // digitalWrite(INVERT_PIN, LOW);
-  // analogWrite(SPEED_PIN, speed); // start
+  digitalWrite(UPPER_INVERT_PIN, LOW);
+  analogWrite(UPPER_SPEED_PIN, speed); // start
 }
 
 void top_motor_stop() { // FINISH THIS FUNCTION after wiring
-  // analogWrite(SPEED_PIN, 0); // stop
+  analogWrite(UPPER_SPEED_PIN, 0); // stop
 }
 
 void stop() {
@@ -70,6 +69,9 @@ void start_intake() {
     intake_motor_move_forward();
 
   } else { // there is no disc, we need one
+
+    // TODO: add a call to the pi to get how many discs are in the top conveyor. For now, it is just always assuming there is a disc in the top conveyor 
+
     intake_state = INTAKE_STATE::INTAKE_RECIEVE;
     top_motor_move_forward();
   }
@@ -121,6 +123,8 @@ void check_intake() {
 int dir_pin = D11;
 int step_pin = D12;
 int sleep_pin = D6; 
+int UPPER_LIMIT_SWITCH_PIN = D4; //NEEDS TO BE CHANGED WHEN WIRED 
+int LOWER_LIMIT_SWITCH_PIN = D5; //NEEDS TO BE CHANGED WHEN WIRED
 
 std_msgs::Bool turntable_state_msg;
 String _turntable_state_topic(NODE_NAME + "_feedback__intake_state");
@@ -232,9 +236,7 @@ void check_turntable() {
 
 void setup() {
   init_std_node();
-  nh.advertise(intake_state_pub);
-
-  
+  nh.advertise(intake_state_pub); 
 
   set_request_callbacks(
     [] () {},
@@ -247,8 +249,8 @@ void setup() {
 
   // intake pins 
   pinMode(BEAM_BREAK_PIN, INPUT_PULLUP) ;
-  pinMode(SPEED_PIN,OUTPUT) ;
-  pinMode(INVERT_PIN, OUTPUT) ;
+  pinMode(INTAKE_SPEED_PIN,OUTPUT) ;
+  pinMode(INTAKE_INVERT_PIN, OUTPUT) ;
 
   // camera pins 
   pinMode(step_pin, OUTPUT);
@@ -266,16 +268,14 @@ void setup() {
 }
 
 // ---- testing ---- 
-// void loop() {
-  // check_intake();
-  // if (verify_motion_complete()) {
-  //   loginfo("debugging test reset");
-  //   delay(5000);
-  //   start_intake();
-  // }
-
-  // move_forward(128);  
-// }
+void loop() {
+  check_intake();
+  if (verify_motion_complete()) {
+    loginfo("debugging test reset");
+    delay(5000);
+    start_intake();
+  }
+}
 
 
 
@@ -287,12 +287,12 @@ void setup() {
 //   Serial.println(run_yaxis_motor);
 // } 
 
-// ---- ros -----
-void loop() {
-  periodic_status();
-  nh.spinOnce();
-  delay(10);
-  check_intake();
-  check_turntable();
-}
+// // ----- ros -----
+// void loop() {
+//   periodic_status();
+//   nh.spinOnce();
+//   delay(10);
+//   check_intake();
+//   check_turntable();
+// }
 

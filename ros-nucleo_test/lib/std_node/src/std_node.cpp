@@ -76,7 +76,7 @@ void set_request_callbacks(std::function<void(void)> _start_measure_callback,std
     _ref__idle_callback = std::bind(_idle_callback);
     };
 
-            
+
 void publish_status() {
     status_pub.publish(&status);
     last_status = millis();
