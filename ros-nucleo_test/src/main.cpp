@@ -76,9 +76,6 @@ void start_intake() {
     intake_motor_move_forward();
 
   } else { // there is no disc, we need one
-
-    // TODO: add a call to the pi to get how many discs are in the top conveyor. For now, it is just always assuming there is a disc in the top conveyor 
-
     intake_state = INTAKE_STATE::INTAKE_RECIEVE;
     top_motor_move_forward();
   }
@@ -95,8 +92,10 @@ void check_intake() {
       if (moved_to_INTAKE_RELEASE_time+1000 < millis()) {
 
         is_disc_present = false;
-        deposited_disc = true; 
+        // deposited_disc = true; 
         intake_state = INTAKE_STATE::INTAKE_RECIEVE;
+        // TODO: add a call to the pi to get how many discs are in the top conveyor. For now, it is just always assuming there is a disc in the top conveyor 
+
         intake_motor_stop();
         top_motor_move_forward(); // should also make sure that it does not go under? 
       }
@@ -104,13 +103,15 @@ void check_intake() {
     case INTAKE_STATE::INTAKE_RECIEVE: 
       if (!beam_broken()){ // therefore disc has come in, and gone past the first green wheel
         is_disc_present = true;
-        
+        intake_state = INTAKE_STATE::INTAKE_IDLE;
+
+        // TODO: determine if it is ok for it to go from idle -> recieve -> idle. This code may not be necessary 
         // this if statement ensures that a disc has been deposited before going back to the idle state. Basically ensuring that it doesn't go from idle -> recieve -> idle 
-        if (deposited_disc) {
-          intake_state = INTAKE_STATE::INTAKE_IDLE;
-        } else {
-          intake_state = INTAKE_STATE::INTAKE_SEND;
-        };
+        // if (deposited_disc) {
+        //   intake_state = INTAKE_STATE::INTAKE_IDLE;
+        // } else {
+        //   intake_state = INTAKE_STATE::INTAKE_SEND;
+        // };
         
       };
       break;
@@ -133,8 +134,8 @@ void check_intake() {
 int dir_pin = D11;
 int step_pin = D12;
 int sleep_pin = D6; 
-int UPPER_LIMIT_SWITCH_PIN = D4; //NEEDS TO BE CHANGED WHEN WIRED 
-int LOWER_LIMIT_SWITCH_PIN = D5; //NEEDS TO BE CHANGED WHEN WIRED
+int UPPER_LIMIT_SWITCH_PIN = D4; //TODO: NEEDS TO BE CHANGED WHEN WIRED 
+int LOWER_LIMIT_SWITCH_PIN = D5; //TODO: NEEDS TO BE CHANGED WHEN WIRED
 
 std_msgs::Bool turntable_state_msg;
 String _turntable_state_topic(NODE_NAME + "_feedback__intake_state");
@@ -278,14 +279,14 @@ void setup() {
 }
 
 // ---- testing ---- 
-void loop() {
-  check_intake();
-  if (verify_motion_complete()) {
-    loginfo("debugging test reset");
-    delay(5000);
-    start_intake();
-  }
-}
+// void loop() {
+//   check_intake();
+//   if (verify_motion_complete()) {
+//     loginfo("debugging test reset");
+//     delay(5000);
+//     start_intake();
+//   }
+// }
 
 
 
@@ -297,12 +298,12 @@ void loop() {
 //   Serial.println(run_yaxis_motor);
 // } 
 
-// // ----- ros -----
-// void loop() {
-//   periodic_status();
-//   nh.spinOnce();
-//   delay(10);
-//   check_intake();
-//   check_turntable();
-// }
+// ----- ros -----
+void loop() {
+  periodic_status();
+  nh.spinOnce();
+  delay(10);
+  check_intake();
+  // check_turntable();
+}
 
