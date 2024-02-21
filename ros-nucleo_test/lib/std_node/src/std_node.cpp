@@ -16,24 +16,23 @@
     #define STATUS_FREQ 1500 // ms
 #endif
 
-enum NODE_STATUS {
-    INITIALIZING_NODE = 0, 
-    IDLE = 1, 
-    MOTION_IN_PROGRESS = 2, 
-    MOTION_COMPLETE = 3, 
-    MEASURE_IN_PROGRESS = 4,
-    MEASURE_COMPLETE = 5,
-    INVALID_MEASURE__REPEAT = 6, 
-    ERROR__REBOOT = 7};
+enum MODULE_STATUS {
+    INITIALIZING_MODULE = 0,
+    IDLE = 1,
+    IN_PROGRESS = 2,
+    COMPLETE = 3,
+    INVALID_REPEAT = 4,
+    ERROR_REBOOT = 5};
 
 enum REQUEST {
-    INITIALIZING = 0, 
-    WAITING = 1, 
-    START_MOTION = 2, 
-    VERIFY__MOTION_COMPLETE = 3, 
-    START_MEASURE = 4, 
-    VERIFY__MEASURE_COMPLETE = 5, 
-    REBOOT = 6};
+    INITIALIZING = 0,
+    STOP = 1,
+    START = 2,
+    VERIFY_COMPLETE = 3,
+    CALIBRATE = 4,
+    REBOOT = 5};
+
+
 
 HardwareSerial hserial(PA_15, PA_2); // NUCLEO-F303K8 RX, TX
 #define Serial1 hserial // This will overwrite the current Serial1 serial port and will use hserial port.
@@ -41,26 +40,80 @@ HardwareSerial hserial(PA_15, PA_2); // NUCLEO-F303K8 RX, TX
 #define __STM32F3xxxx__
 
 ros::NodeHandle nh;
-std_msgs::Int8 request;
-std::function<bool(void)> _ref__verify_measure_complete_callback, _ref__verify_motion_complete_callback;
-std::function<void(void)> _ref__start_motion_callback, _ref__start_measure_callback, _ref__idle_callback;
-std_msgs::Int8 status;
-String _status_topic(NODE_NAME + "_status");
-ros::Publisher status_pub(_status_topic.c_str(), &status);
-String _request_topic(NODE_NAME + "_request");
-void process_request_callback(const std_msgs::Int8& msg);
-ros::Subscriber<std_msgs::Int8> request_sub(_request_topic.c_str(), &process_request_callback);
 unsigned long last_status = 0;
+
+struct MODULE {
+    String module_name;
+    std_msgs::Int8 request;
+    std_msgs::Int8 status;
+
+    std::function<bool(void)> verify_complete_callback;
+    std::function<void(void)> start_callback, idle_callback, calibrate_callback;
+
+    ros::Publisher status_pub;
+    ros::Subscriber<std_msgs::Int8, MODULE> request_sub;
+
+    MODULE(String _module_name, 
+        std::function<void(void)> _start_callback, 
+        std::function<bool(void)> _verify_complete_callback, 
+        std::function<void(void)> _idle_callback, 
+        std::function<void(void)> _calibrate_callback) : 
+        status_pub((_module_name + "_status").c_str(), &status), 
+        request_sub((_module_name + "_request").c_str(), &MODULE::process_request_callback, this) {
+        module_name = _module_name;
+        verify_complete_callback = _verify_complete_callback;
+        start_callback = _start_callback;
+        idle_callback = _idle_callback;
+        calibrate_callback = _calibrate_callback;
+    }
+
+    void init() {
+        nh.advertise(status_pub);
+        nh.subscribe(request_sub);
+    }
+
+    void process_request_callback(const std_msgs::Int8& msg) {
+        bool verify_result;
+        std_msgs::Int8 onetime_status;
+        switch (msg.data) {
+            case REQUEST::START:
+                status.data = MODULE_STATUS::IN_PROGRESS; 
+                status_pub.publish(&status);
+                start_callback(); 
+                break;
+            case REQUEST::VERIFY_COMPLETE:
+                verify_result = verify_complete_callback();
+                onetime_status.data = verify_result ? MODULE_STATUS::COMPLETE : MODULE_STATUS::IN_PROGRESS;
+                status_pub.publish(&onetime_status);
+                break;
+            case REQUEST::STOP:
+                status.data = MODULE_STATUS::IDLE; 
+                status_pub.publish(&status);
+                idle_callback();
+                break;
+            case REQUEST::CALIBRATE:
+                status.data = MODULE_STATUS::IN_PROGRESS;
+                status_pub.publish(&status);
+                calibrate_callback();
+                break;
+            default: 
+                return;
+        }
+        status_pub.publish(&status);
+        loginfo("Request Received, "+String(msg.data));
+    }
+};
+
+std::vector<MODULE> modules;
 
 void init_std_node() {
     nh.initNode();
-    nh.advertise(status_pub);
-    nh.subscribe(request_sub);
     nh.setSpinTimeout(100);
-    request.data = REQUEST::INITIALIZING;
-    status.data = NODE_STATUS::IDLE;
-    status_pub.publish(&status);
     last_status = millis();
+
+    // std::for_each(modules.begin(), modules.end(), [](MODULE &module) {
+    //     module.init();
+    // });
 }
 
 String get_node_tag() { return String("[")+NODE_NAME+String("] "); };
@@ -68,17 +121,20 @@ void loginfo(String msg) { nh.loginfo((get_node_tag()+msg).c_str()); };
 void logwarn(String msg) { nh.logwarn((get_node_tag()+msg).c_str()); };
 void logerr(String msg) { nh.logerror((get_node_tag()+msg).c_str()); };
 
-void set_request_callbacks(std::function<void(void)> _start_measure_callback,std::function<bool(void)> _verify_measure_complete_callback, std::function<void(void)> _start_motion_callback, std::function<bool(void)> _verify_motion_complete_callback, std::function<void(void)> _idle_callback) { 
-    _ref__start_measure_callback = std::bind(_start_measure_callback); 
-    _ref__verify_measure_complete_callback = std::bind(_verify_measure_complete_callback);
-    _ref__start_motion_callback = std::bind(_start_motion_callback);
-    _ref__verify_motion_complete_callback = std::bind(_verify_motion_complete_callback);
-    _ref__idle_callback = std::bind(_idle_callback);
-    };
-
+void init_module(String _module_name, 
+        std::function<void(void)> _start_callback, 
+        std::function<bool(void)> _verify_complete_callback, 
+        std::function<void(void)> _idle_callback, 
+        std::function<void(void)> _calibrate_callback) { 
+    MODULE module = MODULE(_module_name, _start_callback, _verify_complete_callback, _idle_callback, _calibrate_callback);
+    modules.emplace_back(module);
+    module.init();
+};
             
 void publish_status() {
-    status_pub.publish(&status);
+    std::for_each(modules.begin(), modules.end(), [](MODULE &module) {
+        module.status_pub.publish(&module.status);
+    });
     last_status = millis();
 }
 
@@ -86,42 +142,5 @@ void periodic_status() {
     if (millis() - last_status > STATUS_FREQ) {
         publish_status();
     }
-}
-
-void process_request_callback(const std_msgs::Int8& msg) {
-    bool verify_result;
-    std_msgs::Int8 onetime_status;
-    switch (msg.data) {
-        case REQUEST::START_MOTION:
-            status.data = NODE_STATUS::MOTION_IN_PROGRESS; 
-            status_pub.publish(&status);
-            _ref__start_motion_callback(); 
-            break;
-        case REQUEST::START_MEASURE:
-            status.data = NODE_STATUS::MEASURE_IN_PROGRESS; 
-            status_pub.publish(&status);
-            request.data = msg.data;
-            _ref__start_measure_callback();
-            break;
-        case REQUEST::VERIFY__MOTION_COMPLETE:
-            verify_result = _ref__verify_motion_complete_callback();
-            onetime_status.data = verify_result ? NODE_STATUS::MOTION_COMPLETE : NODE_STATUS::MOTION_IN_PROGRESS;
-            status_pub.publish(&onetime_status);
-            break;
-        case REQUEST::VERIFY__MEASURE_COMPLETE:
-            verify_result = _ref__verify_measure_complete_callback();
-            onetime_status.data = verify_result ? NODE_STATUS::MEASURE_COMPLETE : NODE_STATUS::MEASURE_IN_PROGRESS;
-            status_pub.publish(&onetime_status);
-            break;
-        case REQUEST::WAITING:
-            status.data = NODE_STATUS::IDLE; 
-            status_pub.publish(&status);
-            _ref__idle_callback();
-            break;
-        default: 
-            return;
-    }
-    status_pub.publish(&status);
-    loginfo("Request Received, "+String(msg.data));
 }
 

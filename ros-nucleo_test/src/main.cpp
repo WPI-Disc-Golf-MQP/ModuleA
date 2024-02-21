@@ -29,7 +29,7 @@ INTAKE_STATE intake_state = INTAKE_STATE::INTAKE_IDLE;
 bool is_disc_present = false;
 long moved_to_INTAKE_SENDING_time = millis();
 
-void move_forward(int speed = 230) {
+void move_forward(int speed = 200) {
   digitalWrite(INVERT_PIN, LOW);
   analogWrite(SPEED_PIN, speed); // start
   loginfo("move forward");
@@ -69,7 +69,7 @@ void check_intake() {
       stop();
       break;
     case INTAKE_STATE::INTAKE_SENDING:
-      if (moved_to_INTAKE_SENDING_time+1000 < millis()) {
+      if (moved_to_INTAKE_SENDING_time+3000 < millis()) {
         is_disc_present = false;
         stop();
         intake_state = INTAKE_STATE::INTAKE_WAITING_FOR_DISC;
@@ -87,13 +87,16 @@ void check_intake() {
         is_disc_present = true;
       } 
       break;
+    default:
+      logwarn("intake state invalid");
+      break;
   }
 
 
   // publish state to pi 
   if (intake_state_msg.data != (int) intake_state) {
       intake_state_msg.data = intake_state;
-      loginfo("publishing intake state");
+      loginfo("publishing intake state, " + String(intake_state));
       intake_state_pub.publish(&intake_state_msg);
   }
 }
@@ -146,13 +149,13 @@ void check_intake() {
 
 void setup() {
   init_std_node();
-  nh.advertise(intake_state_pub);
-  set_request_callbacks(
-    [] () {},
-    [] () {return true;},
+  init_module("intake",
     start_intake,
     verify_motion_complete,
-    stop);
+    stop, 
+    [] () {}/* TODO: add calibration routine if needed */);
+
+  nh.advertise(intake_state_pub);
 
   // intake pins 
   pinMode(BEAM_BREAK_PIN, INPUT_PULLUP) ;
