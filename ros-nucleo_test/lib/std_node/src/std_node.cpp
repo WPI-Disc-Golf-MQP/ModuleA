@@ -42,6 +42,11 @@ HardwareSerial hserial(PA_15, PA_2); // NUCLEO-F303K8 RX, TX
 ros::NodeHandle nh;
 unsigned long last_status = 0;
 
+String get_node_tag() { return String("[")+NODE_NAME+String("] "); };
+void loginfo(String msg) { nh.loginfo((get_node_tag()+msg).c_str()); };
+void logwarn(String msg) { nh.logwarn((get_node_tag()+msg).c_str()); };
+void logerr(String msg) { nh.logerror((get_node_tag()+msg).c_str()); };
+
 struct MODULE {
     String module_name;
     std_msgs::Int8 request;
@@ -115,11 +120,6 @@ void init_std_node() {
     //     module.init();
     // });
 }
-
-String get_node_tag() { return String("[")+NODE_NAME+String("] "); };
-void loginfo(String msg) { nh.loginfo((get_node_tag()+msg).c_str()); };
-void logwarn(String msg) { nh.logwarn((get_node_tag()+msg).c_str()); };
-void logerr(String msg) { nh.logerror((get_node_tag()+msg).c_str()); };
 
 void init_module(String _module_name, 
         std::function<void(void)> _start_callback, 
