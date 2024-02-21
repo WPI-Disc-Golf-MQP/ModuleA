@@ -222,18 +222,28 @@ void check_turntable() {
 };
 
 
+// void foo() { // blink for testing
+//     digitalWrite(LED_BUILTIN, HIGH);
+//     delay(10);
+//     digitalWrite(LED_BUILTIN, LOW);
+// }
 
 // // ----- SETUP LOOP -----
 
 void setup() {
   init_std_node();
   nh.advertise(intake_state_pub);
+
+  
+
   set_request_callbacks(
     [] () {},
     [] () {return true;},
     start_intake,
     verify_motion_complete,
     stop);
+
+  pinMode(LED_BUILTIN, OUTPUT);
 
   // intake pins 
   pinMode(BEAM_BREAK_PIN, INPUT_PULLUP) ;
@@ -269,20 +279,20 @@ void setup() {
 
 
 
-void loop() { 
-  Serial.println("Starting"); 
-  // delay(30); 
-  check_turntable(); 
-  run_yaxis_motor = true; 
-  Serial.println(run_yaxis_motor);
-} 
+// void loop() { 
+//   Serial.println("Starting"); 
+//   // delay(30); 
+//   check_turntable(); 
+//   run_yaxis_motor = true; 
+//   Serial.println(run_yaxis_motor);
+// } 
 
-// // ---- ros -----
-// void loop() {
-//   periodic_status();
-//   nh.spinOnce();
-//   delay(10);
-//   check_intake();
-//   check_turntable();
-// }
+// ---- ros -----
+void loop() {
+  periodic_status();
+  nh.spinOnce();
+  delay(10);
+  check_intake();
+  check_turntable();
+}
 
