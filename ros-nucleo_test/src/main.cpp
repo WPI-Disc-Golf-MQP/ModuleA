@@ -19,12 +19,6 @@ std_msgs::Bool intake_state_msg;
 String _intake_state_topic("intake_state");
 ros::Publisher intake_state_pub(_intake_state_topic.c_str(), &intake_state_msg);
 
-//ready for main conveyor
-std_msgs::Empty ready_for_main_conveyor_msg;
-String _ready_for_main_conveyor_topic("intake_ready_for_main_conveyor");
-ros::Publisher ready_for_main_conveyor_pub(_ready_for_main_conveyor_topic.c_str(), &ready_for_main_conveyor_msg);
-//use the following to publish: ready_for_main_conveyor_pub.publish(&ready_for_main_conveyor_msg);
-
 enum INTAKE_STATE {
   INTAKE_IDLE = 0,
   INTAKE_SEND = 1, // sending a disc out of the intake onto the conveyor 
@@ -254,7 +248,6 @@ void setup() {
     [] () {}/* TODO: add calibration routine if needed */);
 
   nh.advertise(intake_state_pub);
-  nh.advertise(ready_for_main_conveyor_pub);
 
   pinMode(LED_BUILTIN, OUTPUT);
 
