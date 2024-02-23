@@ -40,12 +40,12 @@ void intake_motor_stop() {
   analogWrite(INTAKE_SPEED_PIN, 0); // stop
 }
 
-void top_motor_move_forward(int speed = 230) { // FINISH THIS FUNCTION after wiring
+void top_motor_move_forward(int speed = 230) { 
   digitalWrite(UPPER_INVERT_PIN, LOW);
   analogWrite(UPPER_SPEED_PIN, speed); // start
 }
 
-void top_motor_stop() { // FINISH THIS FUNCTION after wiring
+void top_motor_stop() { 
   analogWrite(UPPER_SPEED_PIN, 0); // stop
 }
 
@@ -128,8 +128,8 @@ void check_intake() {
 int dir_pin = D11;
 int step_pin = D12;
 int sleep_pin = D6; 
-int UPPER_LIMIT_SWITCH_PIN = D4; //TODO: NEEDS TO BE CHANGED WHEN WIRED 
-int LOWER_LIMIT_SWITCH_PIN = D5; //TODO: NEEDS TO BE CHANGED WHEN WIRED
+int UPPER_LIMIT_SWITCH_PIN = D3; // FINISH THIS FUNCTION 
+int LOWER_LIMIT_SWITCH_PIN = D4; // FINISH THIS FUNCTION 
 
 std_msgs::Bool turntable_state_msg;
 String _turntable_state_topic(NODE_NAME + "_feedback__intake_state");
@@ -145,11 +145,11 @@ TURNTABLE_STATE turntable_state = TURNTABLE_STATE::TURNTABLE_IDLE;
 
 
 bool upper_limit_switched() { // FINISH THIS FUNCTION after wiring
-  return (digitalRead(UPPER_LIMIT_SWITCH_PIN) == 0);
+  return (digitalRead(UPPER_LIMIT_SWITCH_PIN) == 1);
 }
 
 bool lower_limit_switched() { // FINISH THIS FUNCTION after wiring
-  return (digitalRead(LOWER_LIMIT_SWITCH_PIN) == 0);
+  return (digitalRead(LOWER_LIMIT_SWITCH_PIN) == 1);
 }
 
 bool run_yaxis_motor = false;
@@ -183,9 +183,8 @@ void check_turntable() {
     digitalWrite(step_pin, LOW);
     delay(2); 
 
-
     yaxis_motor_last_digital_write = !yaxis_motor_last_digital_write; 
-    yaxis_motor_last_step = millis();
+    yaxis_motor_last_step = millis(); 
   }
 
   if ((spin_motor_last_step+2 < millis()) && run_spin_motor == true) {
