@@ -49,22 +49,32 @@ void logerr(String msg) { nh.logerror((get_node_tag()+msg).c_str()); };
 
 struct MODULE {
     String module_name;
-    std_msgs::Int8 request;
-    std_msgs::Int8 status;
+    std_msgs::Int8 _state_msg;
+    std_msgs::Int8 _status_msg;
 
     std::function<bool(void)> verify_complete_callback;
     std::function<void(void)> start_callback, idle_callback, calibrate_callback;
 
+    String _state_name;
+    String _status_name;
+    String _request_name;
+    ros::Publisher state_pub;
     ros::Publisher status_pub;
     ros::Subscriber<std_msgs::Int8, MODULE> request_sub;
+
+    std_msgs::Int8 onetime_status;
 
     MODULE(String _module_name, 
         std::function<void(void)> _start_callback, 
         std::function<bool(void)> _verify_complete_callback, 
         std::function<void(void)> _idle_callback, 
         std::function<void(void)> _calibrate_callback) : 
-        status_pub((_module_name + "_status").c_str(), &status), 
-        request_sub((_module_name + "_request").c_str(), &MODULE::process_request_callback, this) {
+        _state_name(_module_name + "_state"),
+        _status_name(_module_name + "_status"),
+        _request_name(_module_name + "_request"),
+        state_pub(_state_name.c_str(), &_state_msg), 
+        status_pub(_status_name.c_str(), &_status_msg), 
+        request_sub(_request_name.c_str(), &MODULE::process_request_callback, this) {
         module_name = _module_name;
         verify_complete_callback = _verify_complete_callback;
         start_callback = _start_callback;
@@ -73,17 +83,33 @@ struct MODULE {
     }
 
     void init() {
+        nh.advertise(state_pub);
         nh.advertise(status_pub);
         nh.subscribe(request_sub);
     }
 
+    void publish_status(MODULE_STATUS new_status) {
+        _status_msg.data = new_status;
+        status_pub.publish(&_status_msg);
+        if (new_status == MODULE_STATUS::COMPLETE) {
+            _status_msg.data = MODULE_STATUS::IDLE;
+            status_pub.publish(&_status_msg);
+        }
+    }
+
+    void publish_state(int new_state) {
+        if (_state_msg.data != new_state) {
+            state_pub.publish(&_state_msg);
+        }
+        _state_msg.data = new_state;
+    }
+
     void process_request_callback(const std_msgs::Int8& msg) {
         bool verify_result;
-        std_msgs::Int8 onetime_status;
         switch (msg.data) {
             case REQUEST::START:
-                status.data = MODULE_STATUS::IN_PROGRESS; 
-                status_pub.publish(&status);
+                _status_msg.data = MODULE_STATUS::IN_PROGRESS; 
+                status_pub.publish(&_status_msg);
                 start_callback(); 
                 break;
             case REQUEST::VERIFY_COMPLETE:
@@ -92,24 +118,24 @@ struct MODULE {
                 status_pub.publish(&onetime_status);
                 break;
             case REQUEST::STOP:
-                status.data = MODULE_STATUS::IDLE; 
-                status_pub.publish(&status);
+                _status_msg.data = MODULE_STATUS::IDLE; 
+                status_pub.publish(&_status_msg);
                 idle_callback();
                 break;
             case REQUEST::CALIBRATE:
-                status.data = MODULE_STATUS::IN_PROGRESS;
-                status_pub.publish(&status);
+                _status_msg.data = MODULE_STATUS::IN_PROGRESS;
+                status_pub.publish(&_status_msg);
                 calibrate_callback();
                 break;
             default: 
                 return;
         }
-        status_pub.publish(&status);
+        status_pub.publish(&_status_msg);
         loginfo("Request Received, "+String(msg.data));
     }
 };
 
-std::vector<MODULE> modules;
+std::vector<MODULE*> modules;
 
 void init_std_node() {
     nh.initNode();
@@ -121,19 +147,20 @@ void init_std_node() {
     // });
 }
 
-void init_module(String _module_name, 
+MODULE* init_module(String _module_name, 
         std::function<void(void)> _start_callback, 
         std::function<bool(void)> _verify_complete_callback, 
         std::function<void(void)> _idle_callback, 
         std::function<void(void)> _calibrate_callback) { 
-    MODULE module = MODULE(_module_name, _start_callback, _verify_complete_callback, _idle_callback, _calibrate_callback);
+    MODULE* module = new MODULE(_module_name, _start_callback, _verify_complete_callback, _idle_callback, _calibrate_callback);
     modules.emplace_back(module);
-    module.init();
-};
+    module->init();
+    return module;
+}
             
 void publish_status() {
-    std::for_each(modules.begin(), modules.end(), [](MODULE &module) {
-        module.status_pub.publish(&module.status);
+    std::for_each(modules.begin(), modules.end(), [](MODULE* module) {
+        module->status_pub.publish(&module->_status_msg);
     });
     last_status = millis();
 }
