@@ -71,6 +71,9 @@ void start_intake() {
   }
 }
 
+void calibrate_intake() {
+  loginfo("calibrate_intake; not implemented"); //TODO: Implement calibration
+}
 
 void check_intake() {
   switch (intake_state) {
@@ -164,6 +167,9 @@ void stop_turntable() {
   turntable_state = TURNTABLE_STATE::TURNTABLE_IDLE;
 }
 
+void calibrate_turntable() {
+  loginfo("calibrate_turntable; not implemented"); //TODO: Implement calibration
+}
 
 void check_turntable() {
 
@@ -234,12 +240,13 @@ void setup() {
     start_intake,
     verify_intake_complete,
     stop_intake, 
-    [] () {}/* TODO: add calibration routine if needed */);
+    calibrate_intake/* TODO: add calibration routine if needed */);
+    
   turntable_module = init_module("turntable",
     start_turntable,
     verify_turntable_complete,
     stop_turntable, 
-    [] () {}/* TODO: add calibration routine if needed */);
+    calibrate_turntable/* TODO: add calibration routine if needed */);
 
   pinMode(LED_BUILTIN, OUTPUT);
 
