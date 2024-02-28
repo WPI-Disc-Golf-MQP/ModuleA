@@ -50,7 +50,20 @@ void stop_intake() {
   intake_motor_stop();
 }
 
-bool beam_broken() { 
+
+bool val = 0;
+
+bool beam_broken() {
+
+  // logging function 
+  if (digitalRead(BEAM_BREAK_PIN) != val) {
+    loginfo("Intake beam break changed state to: "+String(digitalRead(BEAM_BREAK_PIN)));
+    val = digitalRead(BEAM_BREAK_PIN);
+  }
+  // -- 
+
+
+
   return (digitalRead(BEAM_BREAK_PIN) == 0);
 }
 
@@ -114,6 +127,7 @@ void check_intake() {
       break;
   }
   intake_module->publish_state((int) intake_state);
+  beam_broken();
 }
 
 // ----- CAMERA TURNTABLE ----- 
