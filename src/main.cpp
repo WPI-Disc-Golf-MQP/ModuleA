@@ -62,8 +62,6 @@ bool beam_broken() {
   }
   // -- 
 
-
-
   return (digitalRead(BEAM_BREAK_PIN) == 0);
 }
 
@@ -73,7 +71,8 @@ bool verify_intake_complete() {
 
 void start_intake() {
   loginfo("start_intake");
-  if (is_disc_present) {
+  // if (is_disc_present) {
+  if (true) { // for now want to only deal with if the disc is present in the intake
     intake_state = INTAKE_STATE::INTAKE_SEND;
     moved_to_INTAKE_RELEASE_time = millis();
     intake_motor_move_forward();
@@ -107,7 +106,7 @@ void check_intake() {
       }
       break;
     case INTAKE_STATE::INTAKE_RECIEVE: 
-      if (!beam_broken()){ // therefore disc has come in, and gone past the first green wheel
+      if (beam_broken()){ // therefore disc has come in, and gone past the first green wheel
         is_disc_present = true;
         intake_state = INTAKE_STATE::INTAKE_IDLE;
         intake_module->publish_status(MODULE_STATUS::COMPLETE);
