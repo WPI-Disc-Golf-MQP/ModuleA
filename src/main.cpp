@@ -132,9 +132,10 @@ void check_intake() {
 // ----- CAMERA TURNTABLE ----- 
 
 MODULE* turntable_module;
+
 int dir_pin = D11;
 int step_pin = D12;
-int sleep_pin = D6; 
+int stepper1_enable_pin = D10; 
 int UPPER_LIMIT_SWITCH_PIN = D3; // FINISH THIS FUNCTION 
 int LOWER_LIMIT_SWITCH_PIN = D4; // FINISH THIS FUNCTION 
 
@@ -186,19 +187,31 @@ void calibrate_turntable() {
 
 void check_turntable() {
 
+  // turn on or off the enable pins
+  if (run_yaxis_motor == true) {
+    digitalWrite(stepper1_enable_pin, HIGH);
+  } else {
+    digitalWrite(stepper1_enable_pin, LOW);
+  }
+
+  if (run_spin_motor == true) {
+    // TODO: // digitalWrite() // digital write the stepper motor enable high 
+  } else {
+    // TODO: // digial write stepper motor enable low 
+  }
+
+
   // drive the motor if the flag has been set to run it // TODO implimet the sleep pin as well 
   if ((yaxis_motor_last_step+2 < millis()) && run_yaxis_motor == true) {
-    // loginfo("triggered correctly");
+    // digitalWrite(step_pin, HIGH);
+    // delay(2);
+    // digitalWrite(step_pin, LOW);
+    // delay(2); 
 
-    // digitalWrite(step_pin, !yaxis_motor_last_digital_write);
-    digitalWrite(step_pin, HIGH);
-    delay(2);
-    digitalWrite(step_pin, LOW);
-    delay(2); 
-
+    digitalWrite(step_pin, !yaxis_motor_last_digital_write);
     yaxis_motor_last_digital_write = !yaxis_motor_last_digital_write; 
     yaxis_motor_last_step = millis(); 
-  }
+  } 
 
   if ((spin_motor_last_step+2 < millis()) && run_spin_motor == true) {
     digitalWrite(step_pin, !spin_motor_last_digital_write);
@@ -271,11 +284,11 @@ void setup() {
   // camera pins 
   pinMode(step_pin, OUTPUT);
   pinMode(dir_pin, OUTPUT);
-  pinMode(sleep_pin, OUTPUT);
+  pinMode(stepper1_enable_pin, OUTPUT);
 
   digitalWrite(step_pin, LOW);
   digitalWrite(dir_pin, LOW);
-  digitalWrite(sleep_pin, HIGH);
+  digitalWrite(stepper1_enable_pin, LOW);
 
 
   loginfo("setup() Complete");
@@ -294,7 +307,6 @@ void setup() {
 
 
 // void loop() { 
-//   Serial.println("Starting"); 
 //   // delay(30); 
 //   check_turntable(); 
 //   run_yaxis_motor = true; 
