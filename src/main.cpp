@@ -188,7 +188,7 @@ void check_turntable() {
 
   // drive the motor if the flag has been set to run it // TODO implimet the sleep pin as well 
   if ((yaxis_motor_last_step+2 < millis()) && run_yaxis_motor == true) {
-    loginfo("triggered correctly");
+    // loginfo("triggered correctly");
 
     // digitalWrite(step_pin, !yaxis_motor_last_digital_write);
     digitalWrite(step_pin, HIGH);
