@@ -133,11 +133,11 @@ void check_intake() {
 
 MODULE* turntable_module;
 
-int dir_pin = D11;
-int step_pin = D12;
-int stepper1_enable_pin = D10; 
-int UPPER_LIMIT_SWITCH_PIN = D3; // FINISH THIS FUNCTION 
-int LOWER_LIMIT_SWITCH_PIN = D4; // FINISH THIS FUNCTION 
+int yaxis_motor_dir_pin = D11;
+int yaxis_motor_step_pin = D12;
+int yaxis_motor_enable_pin = D10; 
+int UPPER_LIMIT_SWITCH_PIN = D3; 
+int LOWER_LIMIT_SWITCH_PIN = D4; 
 
 enum TURNTABLE_STATE {
   TURNTABLE_IDLE = 0,
@@ -148,11 +148,11 @@ enum TURNTABLE_STATE {
 TURNTABLE_STATE turntable_state = TURNTABLE_STATE::TURNTABLE_IDLE;
 
 
-bool upper_limit_switched() { // FINISH THIS FUNCTION after wiring
+bool upper_limit_switched() {  
   return (digitalRead(UPPER_LIMIT_SWITCH_PIN) == 1);
 }
 
-bool lower_limit_switched() { // FINISH THIS FUNCTION after wiring
+bool lower_limit_switched() { 
   return (digitalRead(LOWER_LIMIT_SWITCH_PIN) == 1);
 }
 
@@ -168,11 +168,14 @@ bool run_spin_motor = false;
 long spin_motor_last_step = millis();
 bool spin_motor_last_digital_write = false;
 
+long when_spinning_started = millis();
 
 void start_turntable() {
+  loginfo("Hi! Starting turntable!");
   turntable_state = TURNTABLE_STATE::TURNTABLE_RAISING;
+  digitalWrite(yaxis_motor_dir_pin, LOW);
   run_yaxis_motor = true; 
-  yaxis_motor_last_step = millis();
+  // yaxis_motor_last_step = millis(); // I don't think you need this 
 }
 
 void stop_turntable() {
@@ -189,9 +192,9 @@ void check_turntable() {
 
   // turn on or off the enable pins
   if (run_yaxis_motor == true) {
-    digitalWrite(stepper1_enable_pin, HIGH);
+    digitalWrite(yaxis_motor_enable_pin, HIGH);
   } else {
-    digitalWrite(stepper1_enable_pin, LOW);
+    digitalWrite(yaxis_motor_enable_pin, LOW);
   }
 
   if (run_spin_motor == true) {
@@ -208,13 +211,13 @@ void check_turntable() {
     // digitalWrite(step_pin, LOW);
     // delay(2); 
 
-    digitalWrite(step_pin, !yaxis_motor_last_digital_write);
+    digitalWrite(yaxis_motor_step_pin, !yaxis_motor_last_digital_write);
     yaxis_motor_last_digital_write = !yaxis_motor_last_digital_write; 
     yaxis_motor_last_step = millis(); 
   } 
 
   if ((spin_motor_last_step+2 < millis()) && run_spin_motor == true) {
-    digitalWrite(step_pin, !spin_motor_last_digital_write);
+    digitalWrite(yaxis_motor_step_pin, !spin_motor_last_digital_write);
     spin_motor_last_digital_write = !spin_motor_last_digital_write; 
     spin_motor_last_step = millis();
   }
@@ -229,16 +232,25 @@ void check_turntable() {
       if (upper_limit_switched() == true) {
         run_yaxis_motor = false; 
         turntable_state = TURNTABLE_STATE::TURNTABLE_SPINNING; 
+        when_spinning_started = millis();
         run_spin_motor = true; 
-        spin_motor_last_step = millis();
+        // spin_motor_last_step = millis(); // I dont think I need this line? 
       }
       
       break;
     case TURNTABLE_STATE::TURNTABLE_SPINNING:
     //TALK TO THE PI TO TAKE PICTURES
+    // TODO: do not dead recon this section, actually get confirmation from the pi that picture taking is complete 
+      
+      if (when_spinning_started+2 < millis()) {
+        turntable_state = TURNTABLE_STATE::TURNTABLE_LOWERING; 
+        digitalWrite(yaxis_motor_dir_pin, HIGH);
+        run_yaxis_motor = true; 
+      }
+
       break;
     case TURNTABLE_STATE::TURNTABLE_LOWERING:
-      if (lower_limit_switched()) {
+      if (lower_limit_switched() == true) {
         run_yaxis_motor = false; 
         run_spin_motor = false; 
         turntable_state = TURNTABLE_STATE::TURNTABLE_IDLE; 
@@ -282,25 +294,28 @@ void setup() {
   pinMode(INTAKE_INVERT_PIN, OUTPUT) ;
 
   // camera pins 
-  pinMode(step_pin, OUTPUT);
-  pinMode(dir_pin, OUTPUT);
-  pinMode(stepper1_enable_pin, OUTPUT);
+  pinMode(yaxis_motor_step_pin, OUTPUT);
+  pinMode(yaxis_motor_dir_pin, OUTPUT);
+  pinMode(yaxis_motor_enable_pin, OUTPUT);
 
-  digitalWrite(step_pin, LOW);
-  digitalWrite(dir_pin, LOW);
-  digitalWrite(stepper1_enable_pin, LOW);
+  digitalWrite(yaxis_motor_step_pin, LOW);
+  digitalWrite(yaxis_motor_dir_pin, LOW);
+  digitalWrite(yaxis_motor_enable_pin, LOW);
 
 
   loginfo("setup() Complete");
 }
 
+
 // ---- testing ---- 
+// bool doit = true;
 // void loop() {
-//   check_intake();
-//   if (verify_motion_complete()) {
+//   check_turntable();
+//   if (doit) {
+//     doit = false;
 //     loginfo("debugging test reset");
 //     delay(5000);
-//     start_intake();
+//     start_turntable();
 //   }
 // }
 
