@@ -203,7 +203,6 @@ void check_turntable() {
     // TODO: // digial write stepper motor enable low 
   }
 
-
   // drive the motor if the flag has been set to run it // TODO implimet the sleep pin as well 
   if ((yaxis_motor_last_step+2 < millis()) && run_yaxis_motor == true) {
     // digitalWrite(step_pin, HIGH);
@@ -211,15 +210,15 @@ void check_turntable() {
     // digitalWrite(step_pin, LOW);
     // delay(2); 
 
+    loginfo("Spinning yaxis motor");
+
     digitalWrite(yaxis_motor_step_pin, !yaxis_motor_last_digital_write);
     yaxis_motor_last_digital_write = !yaxis_motor_last_digital_write; 
     yaxis_motor_last_step = millis(); 
   } 
 
   if ((spin_motor_last_step+2 < millis()) && run_spin_motor == true) {
-    digitalWrite(yaxis_motor_step_pin, !spin_motor_last_digital_write);
-    spin_motor_last_digital_write = !spin_motor_last_digital_write; 
-    spin_motor_last_step = millis();
+    // TODO: add the spin stepper motor
   }
 
 
@@ -242,7 +241,7 @@ void check_turntable() {
     //TALK TO THE PI TO TAKE PICTURES
     // TODO: do not dead recon this section, actually get confirmation from the pi that picture taking is complete 
       
-      if (when_spinning_started+2 < millis()) {
+      if (when_spinning_started+2000 < millis()) {
         turntable_state = TURNTABLE_STATE::TURNTABLE_LOWERING; 
         digitalWrite(yaxis_motor_dir_pin, HIGH);
         run_yaxis_motor = true; 
