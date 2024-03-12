@@ -94,7 +94,7 @@ void check_intake() {
       top_motor_stop();
       break;
     case INTAKE_STATE::INTAKE_SEND: 
-      if (moved_to_INTAKE_RELEASE_time+1000 < millis()) {
+      if (moved_to_INTAKE_RELEASE_time+2000 < millis()) {
 
         is_disc_present = false;
         // deposited_disc = true; 
@@ -204,7 +204,7 @@ void check_turntable() {
   }
 
   // drive the motor if the flag has been set to run it // TODO implimet the sleep pin as well 
-  if ((yaxis_motor_last_step+2 < millis()) && run_yaxis_motor == true) {
+  if ((yaxis_motor_last_step+0.5 < millis()) && run_yaxis_motor == true) {
     // digitalWrite(step_pin, HIGH);
     // delay(2);
     // digitalWrite(step_pin, LOW);
