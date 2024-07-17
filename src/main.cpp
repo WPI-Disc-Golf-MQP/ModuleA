@@ -55,17 +55,19 @@ void intake_motor_start(int speed = 230)
   analogWrite(INTAKE_SPEED_PIN, speed); // start
 }
 
-void intake_motor_stop() {
+void intake_motor_stop() 
+{
   analogWrite(INTAKE_SPEED_PIN, 0); // stop
 }
 
-void top_motor_start(int speed = 230) 
+void top_motor_start(int speed = 20) 
 { 
-  leftMotor.SetTargetSpeed(50);
-  rightMotor.SetTargetSpeed(50);
+  leftMotor.SetTargetSpeed(speed);
+  rightMotor.SetTargetSpeed(speed);
 }
 
-void top_motor_stop() { 
+void top_motor_stop() 
+{ 
   leftMotor.SetTargetSpeed(0);
   rightMotor.SetTargetSpeed(0);
 }
