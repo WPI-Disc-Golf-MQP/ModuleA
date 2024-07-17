@@ -72,7 +72,8 @@ void top_motor_stop()
   rightMotor.SetTargetSpeed(0);
 }
 
-void stop_intake() {
+void stop_intake() 
+{
   top_motor_stop();
   intake_motor_stop();
 }
@@ -89,11 +90,13 @@ bool checkBeamBreak(void)
   return intakeBeamBreakSensor.checkButtonPress();
 }
 
-bool verify_intake_complete() {
+bool verify_intake_complete() 
+{
   return intake_state == INTAKE_STATE::INTAKE_IDLE;
 }
 
-void start_intake() {
+void start_intake() 
+{
   loginfo("start_intake");
   // if (is_disc_present) {
   if (true) { // for now want to only deal with if the disc is present in the intake
@@ -109,7 +112,8 @@ void start_intake() {
   }
 }
 
-void calibrate_intake() {
+void calibrate_intake() 
+{
   loginfo("calibrate_intake; not implemented"); //TODO: Implement calibration
 }
 
