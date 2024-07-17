@@ -355,7 +355,8 @@ void setup()
     stop_turntable, 
     calibrate_turntable/* TODO: add calibration routine if needed */);
 
-  topMotor.InitializeMotor();
+  leftMotor.InitializeMotor();
+  rightMotor.InitializeMotor();
 
   pinMode(LED_BUILTIN, OUTPUT);
 
