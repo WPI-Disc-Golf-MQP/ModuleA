@@ -56,9 +56,6 @@ void stop_intake() {
   intake_motor_stop();
 }
 
-
-//bool val = 0;
-
 /**
  * The beam break sensor has the same behaviour as a button.
  *    HIGH -> unbroken ("unpushed")
@@ -66,7 +63,7 @@ void stop_intake() {
  */
 Button intakeBeamBreakSensor(BEAM_BREAK_PIN);
 
-bool checkBeamBreak() 
+bool checkBeamBreak(void) 
 {
   return intakeBeamBreakSensor.checkButtonPress();
   // logging function 
