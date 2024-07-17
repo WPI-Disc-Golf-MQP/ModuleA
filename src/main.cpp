@@ -14,11 +14,11 @@ EventTimer intakeTimer;
 // ----- INTAKE -----  
 MODULE* intake_module;
 
-int BEAM_BREAK_PIN = D2;
-int INTAKE_SPEED_PIN = A0;
-int INTAKE_INVERT_PIN = D13;
-int UPPER_SPEED_PIN = A1;
-int UPPER_INVERT_PIN = D6;
+const uint8_t BEAM_BREAK_PIN = D2;
+const uint8_t INTAKE_SPEED_PIN = A0;
+const uint8_t INTAKE_INVERT_PIN = D13;
+const uint8_t UPPER_SPEED_PIN = A1;
+const uint8_t UPPER_INVERT_PIN = D6;
 
 const uint8_t COIL_ENC_A = D7;
 const uint8_t COIL_ENC_B = D8;
