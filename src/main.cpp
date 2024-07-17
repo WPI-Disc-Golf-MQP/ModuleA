@@ -380,6 +380,7 @@ void loop() {
   periodic_status();
   nh.spinOnce();
 
+  // Intake events
   if(checkBeamBreak()) handleBeamBreak();
   if(intakeTimer.checkExpired()) handleIntakeTimer();
 
