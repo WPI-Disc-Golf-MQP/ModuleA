@@ -6,6 +6,8 @@
 #include <std_msgs/Empty.h>
 #include <Arduino.h>
 
+#include "encoded-motor.h"
+
 #include <button.h>
 
 #include <event_timer.h>
@@ -15,8 +17,10 @@ EventTimer intakeTimer;
 MODULE* intake_module;
 
 const uint8_t BEAM_BREAK_PIN = D2;
+
 const uint8_t INTAKE_SPEED_PIN = A0;
 const uint8_t INTAKE_INVERT_PIN = D13;
+
 const uint8_t UPPER_SPEED_PIN = A1;
 const uint8_t UPPER_INVERT_PIN = D6;
 
