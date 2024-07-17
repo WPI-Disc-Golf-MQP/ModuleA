@@ -31,7 +31,8 @@ bool is_disc_present = false;
 long moved_to_INTAKE_RELEASE_time = millis();
 bool deposited_disc = false; // flag if this instance of calling the start function has yet deposited a disc
 
-void intake_motor_move_forward(int speed = 230) {
+void intake_motor_start(int speed = 230) 
+{
   digitalWrite(INTAKE_INVERT_PIN, LOW);
   analogWrite(INTAKE_SPEED_PIN, speed); // start
 }
@@ -40,7 +41,8 @@ void intake_motor_stop() {
   analogWrite(INTAKE_SPEED_PIN, 0); // stop
 }
 
-void top_motor_move_forward(int speed = 230) { 
+void top_motor_start(int speed = 230) 
+{ 
   digitalWrite(UPPER_INVERT_PIN, LOW);
   analogWrite(UPPER_SPEED_PIN, speed); // start
 }
@@ -85,13 +87,15 @@ void start_intake() {
   loginfo("start_intake");
   // if (is_disc_present) {
   if (true) { // for now want to only deal with if the disc is present in the intake
+    intakeTimer.start(2000);
+    //moved_to_INTAKE_RELEASE_time = millis();
+    intake_motor_start();
     intake_state = INTAKE_STATE::INTAKE_SEND;
-    moved_to_INTAKE_RELEASE_time = millis();
-    intake_motor_move_forward();
-
-  } else { // there is no disc, we need one
+  } 
+  else // there is no disc, we need one
+  { 
     intake_state = INTAKE_STATE::INTAKE_RECEIVE;
-    top_motor_move_forward();
+    top_motor_start();
   }
 }
 
@@ -99,6 +103,9 @@ void calibrate_intake() {
   loginfo("calibrate_intake; not implemented"); //TODO: Implement calibration
 }
 
+/**
+ * OBSOLETE. Replaced with checker/handler structure in loop()
+ */
 void check_intake() {
   switch (intake_state) {
     case INTAKE_STATE::INTAKE_IDLE: 
@@ -114,7 +121,7 @@ void check_intake() {
         // TODO: add a call to the pi to get how many discs are in the top conveyor. For now, it is just always assuming there is a disc in the top conveyor 
 
         intake_motor_stop();
-        top_motor_move_forward(); // should also make sure that it does not go under? 
+        top_motor_start(); // should also make sure that it does not go under? 
       }
       break;
     case INTAKE_STATE::INTAKE_RECEIVE: 
@@ -146,22 +153,27 @@ void handleBeamBreak(void)
   if(intake_state == INTAKE_STATE::INTAKE_RECEIVE)
   {
     is_disc_present = true; //why?
-    intake_module->publish_status(MODULE_STATUS::COMPLETE);
-    intake_motor_stop();
     top_motor_stop();
+    //intake_motor_stop();  // not needed here
+    
+    intake_module->publish_status(MODULE_STATUS::COMPLETE);
     intake_state = INTAKE_STATE::INTAKE_IDLE;
-
-        // TODO: determine if it is ok for it to go from idle -> recieve -> idle. This code may not be necessary 
-        // this if statement ensures that a disc has been deposited before going back to the idle state. Basically ensuring that it doesn't go from idle -> recieve -> idle 
-        // if (deposited_disc) {
-        //   intake_state = INTAKE_STATE::INTAKE_IDLE;
-        // } else {
-        //   intake_state = INTAKE_STATE::INTAKE_SEND;
-        // };
   } 
 }
 
+void handleIntakeTimer(void)
+{
+  if(intake_state == INTAKE_STATE::INTAKE_SEND)
+  {
+    intake_motor_stop();
 
+    is_disc_present = false;
+    // TODO: add a call to the pi to get how many discs are in the top conveyor. For now, it is just always assuming there is a disc in the top conveyor 
+
+    top_motor_start(); 
+    intake_state = INTAKE_STATE::INTAKE_RECEIVE;
+  }
+}
 
 
 
@@ -371,8 +383,9 @@ void loop() {
   nh.spinOnce();
 
   if(checkBeamBreak()) handleBeamBreak();
+  if(intakeTimer.checkExpired()) handleIntakeTimer();
 
-  check_intake();
+  //check_intake();
   check_turntable();
 }
 
