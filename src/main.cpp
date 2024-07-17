@@ -41,6 +41,9 @@ enum INTAKE_STATE
 
 INTAKE_STATE intake_state = INTAKE_STATE::INTAKE_IDLE;
 
+/**
+ * Using template classes for the motors, which makes setting up interrupts easier.
+ */
 EncodedMotor<LEFT_ENC_A , LEFT_ENC_B , LEFT_SPEED_PIN , LEFT_DIR_PIN >  leftMotor;
 EncodedMotor<RIGHT_ENC_A, RIGHT_ENC_B, RIGHT_SPEED_PIN, RIGHT_DIR_PIN> rightMotor;
 
