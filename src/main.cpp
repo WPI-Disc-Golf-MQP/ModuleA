@@ -57,7 +57,7 @@ void stop_intake() {
 }
 
 
-bool val = 0;
+//bool val = 0;
 
 /**
  * The beam break sensor has the same behaviour as a button.
