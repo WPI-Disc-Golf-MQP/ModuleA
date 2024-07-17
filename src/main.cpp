@@ -6,6 +6,8 @@
 #include <std_msgs/Empty.h>
 #include <Arduino.h>
 
+#include <button.h>
+
 #include <event_timer.h>
 EventTimer intakeTimer;
 
@@ -55,16 +57,24 @@ void stop_intake() {
 
 bool val = 0;
 
-bool beam_broken() {
+/**
+ * The beam break sensor has the same behaviour as a button.
+ *    HIGH -> unbroken ("unpushed")
+ *    LOW  -> broken   ("pushed")
+ */
+Button intakeBeamBreakSensor(BEAM_BREAK_PIN);
 
+bool checkBeamBreak() 
+{
+  return intakeBeamBreakSensor.checkButtonPress();
   // logging function 
-  if (digitalRead(BEAM_BREAK_PIN) != val) {
-    loginfo("Intake beam break changed state to: "+String(digitalRead(BEAM_BREAK_PIN)));
-    val = digitalRead(BEAM_BREAK_PIN);
-  }
-  // -- 
+  // if (digitalRead(BEAM_BREAK_PIN) != val) {
+  //   loginfo("Intake beam break changed state to: "+String(digitalRead(BEAM_BREAK_PIN)));
+  //   val = digitalRead(BEAM_BREAK_PIN);
+  // }
+  // // -- 
 
-  return (digitalRead(BEAM_BREAK_PIN) == 0);
+  // return (digitalRead(BEAM_BREAK_PIN) == 0);
 }
 
 bool verify_intake_complete() {
@@ -108,7 +118,7 @@ void check_intake() {
       }
       break;
     case INTAKE_STATE::INTAKE_RECIEVE: 
-      if (beam_broken()){ // therefore disc has come in, and gone past the first green wheel
+      if (checkBeamBreak()){ // therefore disc has come in, and gone past the first green wheel
         is_disc_present = true;
         intake_state = INTAKE_STATE::INTAKE_IDLE;
         intake_module->publish_status(MODULE_STATUS::COMPLETE);
@@ -128,8 +138,33 @@ void check_intake() {
       break;
   }
   intake_module->publish_state((int) intake_state);
-  beam_broken();
+  checkBeamBreak();
 }
+
+void handleBeamBreak(void)
+{
+  if(intake_state == INTAKE_STATE::INTAKE_RECIEVE)
+  {
+    is_disc_present = true; //why?
+    intake_module->publish_status(MODULE_STATUS::COMPLETE);
+    intake_motor_stop();
+    top_motor_stop();
+    intake_state = INTAKE_STATE::INTAKE_IDLE;
+
+        // TODO: determine if it is ok for it to go from idle -> recieve -> idle. This code may not be necessary 
+        // this if statement ensures that a disc has been deposited before going back to the idle state. Basically ensuring that it doesn't go from idle -> recieve -> idle 
+        // if (deposited_disc) {
+        //   intake_state = INTAKE_STATE::INTAKE_IDLE;
+        // } else {
+        //   intake_state = INTAKE_STATE::INTAKE_SEND;
+        // };
+  } 
+}
+
+
+
+
+
 
 // ----- CAMERA TURNTABLE ----- 
 
@@ -290,7 +325,8 @@ void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
 
   // intake pins 
-  pinMode(BEAM_BREAK_PIN, INPUT_PULLUP) ;
+  intakeBeamBreakSensor.init();
+  //pinMode(BEAM_BREAK_PIN, INPUT_PULLUP) ;
   pinMode(INTAKE_SPEED_PIN,OUTPUT) ;
   pinMode(INTAKE_INVERT_PIN, OUTPUT) ;
 
@@ -333,6 +369,9 @@ void setup() {
 void loop() {
   periodic_status();
   nh.spinOnce();
+
+  if(checkBeamBreak()) handleBeamBreak();
+
   check_intake();
   check_turntable();
 }
