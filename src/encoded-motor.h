@@ -44,8 +44,6 @@ public:
 
     void InitializeEncoder(void)
     {    
-        Serial.println("InitializeEncoder()");
-
         // Set the pins as pulled-up inputs.
         pinMode(encA, INPUT_PULLUP);
         pinMode(encB, INPUT_PULLUP);
@@ -53,26 +51,14 @@ public:
         // Attach the interrupt to the A pin
         if(digitalPinToInterrupt(encA) != NOT_AN_INTERRUPT) 
         {
-            Serial.print("Attaching interrupt: ");
-            Serial.print(encA);
-            Serial.print('\n');
-
             attachInterrupt(digitalPinToInterrupt(encA), ProcessEncoderTickA, CHANGE); // interrupt
         }
-        else {while(1) {Serial.println("Not an interrupt pin!");}}
 
         // Attach the interrupt to the B pin
         if(digitalPinToInterrupt(encB) != NOT_AN_INTERRUPT) 
         {
-            Serial.print("Attaching interrupt: ");
-            Serial.print(encB);
-            Serial.print('\n');
-
             attachInterrupt(digitalPinToInterrupt(encB), ProcessEncoderTickB, CHANGE); // interrupt
         }
-        else {while(1) {Serial.println("Not an interrupt pin!");}}
-
-        Serial.println("/InitializeEncoder()");
     }
 };
 
@@ -177,6 +163,7 @@ protected:
         analogWrite(PWM, effort);
     }
 
+public:
     /**
      * This is where you'll put the guts of your motor code
     */
@@ -196,19 +183,6 @@ protected:
 
                 // Set the effort for the motor
                 SetEffort(effort);
-
-                #ifdef __MOTOR_DEBUG__
-                Serial.print(targetSpeed);
-                Serial.print('\t');
-                Serial.print(speed);
-                Serial.print('\t');
-                Serial.print(error);
-                Serial.print('\t');
-                Serial.print(sumError);
-                Serial.print('\t');
-                Serial.print(effort);
-                Serial.print('\t');
-                #endif
             }
         }
     }
