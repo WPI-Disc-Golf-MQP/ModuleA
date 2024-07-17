@@ -28,8 +28,8 @@ enum INTAKE_STATE {
 INTAKE_STATE intake_state = INTAKE_STATE::INTAKE_IDLE;
 
 bool is_disc_present = false;
-long moved_to_INTAKE_RELEASE_time = millis();
-bool deposited_disc = false; // flag if this instance of calling the start function has yet deposited a disc
+//long moved_to_INTAKE_RELEASE_time = millis();
+//bool deposited_disc = false; // flag if this instance of calling the start function has yet deposited a disc
 
 void intake_motor_start(int speed = 230) 
 {
@@ -105,7 +105,7 @@ void calibrate_intake() {
 
 /**
  * OBSOLETE. Replaced with checker/handler structure in loop()
- */
+ *
 void check_intake() {
   switch (intake_state) {
     case INTAKE_STATE::INTAKE_IDLE: 
@@ -147,7 +147,7 @@ void check_intake() {
   intake_module->publish_state((int) intake_state);
   checkBeamBreak();
 }
-
+ */
 void handleBeamBreak(void)
 {
   if(intake_state == INTAKE_STATE::INTAKE_RECEIVE)
