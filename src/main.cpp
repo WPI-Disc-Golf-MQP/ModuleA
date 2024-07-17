@@ -23,7 +23,7 @@ int UPPER_INVERT_PIN = D6;
 enum INTAKE_STATE {
   INTAKE_IDLE = 0,
   INTAKE_SEND = 1, // sending a disc out of the intake onto the conveyor 
-  INTAKE_RECIEVE = 2, // getting a disc from the top conveyor into the intake 
+  INTAKE_RECEIVE = 2, // getting a disc from the top conveyor into the intake 
   };
 INTAKE_STATE intake_state = INTAKE_STATE::INTAKE_IDLE;
 
@@ -90,7 +90,7 @@ void start_intake() {
     intake_motor_move_forward();
 
   } else { // there is no disc, we need one
-    intake_state = INTAKE_STATE::INTAKE_RECIEVE;
+    intake_state = INTAKE_STATE::INTAKE_RECEIVE;
     top_motor_move_forward();
   }
 }
@@ -110,14 +110,14 @@ void check_intake() {
 
         is_disc_present = false;
         // deposited_disc = true; 
-        intake_state = INTAKE_STATE::INTAKE_RECIEVE;
+        intake_state = INTAKE_STATE::INTAKE_RECEIVE;
         // TODO: add a call to the pi to get how many discs are in the top conveyor. For now, it is just always assuming there is a disc in the top conveyor 
 
         intake_motor_stop();
         top_motor_move_forward(); // should also make sure that it does not go under? 
       }
       break;
-    case INTAKE_STATE::INTAKE_RECIEVE: 
+    case INTAKE_STATE::INTAKE_RECEIVE: 
       if (checkBeamBreak()){ // therefore disc has come in, and gone past the first green wheel
         is_disc_present = true;
         intake_state = INTAKE_STATE::INTAKE_IDLE;
@@ -143,7 +143,7 @@ void check_intake() {
 
 void handleBeamBreak(void)
 {
-  if(intake_state == INTAKE_STATE::INTAKE_RECIEVE)
+  if(intake_state == INTAKE_STATE::INTAKE_RECEIVE)
   {
     is_disc_present = true; //why?
     intake_module->publish_status(MODULE_STATUS::COMPLETE);
