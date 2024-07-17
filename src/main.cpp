@@ -379,28 +379,6 @@ void setup()
   loginfo("setup() Complete");
 }
 
-
-// ---- testing ---- 
-// bool doit = true;
-// void loop() {
-//   check_turntable();
-//   if (doit) {
-//     doit = false;
-//     loginfo("debugging test reset");
-//     delay(5000);
-//     start_turntable();
-//   }
-// }
-
-
-
-// void loop() { 
-//   // delay(30); 
-//   check_turntable(); 
-//   run_yaxis_motor = true; 
-//   Serial.println(run_yaxis_motor);
-// } 
-
 // ----- ros -----
 void loop() {
   periodic_status();
@@ -412,7 +390,6 @@ void loop() {
   leftMotor.ControlMotorSpeed();
   rightMotor.ControlMotorSpeed();
 
-  //check_intake();
   check_turntable();
 }
 
