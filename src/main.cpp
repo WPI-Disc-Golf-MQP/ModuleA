@@ -38,15 +38,13 @@ enum INTAKE_STATE
   INTAKE_RECEIVE = 2, // getting a disc from the top conveyor into the intake 
   INTAKE_SYNC = 3,    // for Miya's coils -- we need to make sure they stay aligned
 };
-  
+
 INTAKE_STATE intake_state = INTAKE_STATE::INTAKE_IDLE;
 
 EncodedMotor<LEFT_ENC_A , LEFT_ENC_B , LEFT_SPEED_PIN , LEFT_DIR_PIN >  leftMotor;
 EncodedMotor<RIGHT_ENC_A, RIGHT_ENC_B, RIGHT_SPEED_PIN, RIGHT_DIR_PIN> rightMotor;
 
 bool is_disc_present = false;
-//long moved_to_INTAKE_RELEASE_time = millis();
-//bool deposited_disc = false; // flag if this instance of calling the start function has yet deposited a disc
 
 void intake_motor_start(int speed = 230) 
 {
