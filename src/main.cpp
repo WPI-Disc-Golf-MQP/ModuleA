@@ -147,6 +147,7 @@ void check_intake() {
  */
 void handleBeamBreak(void)
 {
+  loginfo("Intake beam break.");
   if(intake_state == INTAKE_STATE::INTAKE_RECEIVE)
   {
     is_disc_present = true; //why?
