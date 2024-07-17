@@ -60,14 +60,11 @@ void top_motor_start(int speed = 230)
 { 
   leftMotor.SetTargetSpeed(50);
   rightMotor.SetTargetSpeed(50);
-  // digitalWrite(UPPER_INVERT_PIN, LOW);
-  // analogWrite(UPPER_SPEED_PIN, speed); // start
 }
 
 void top_motor_stop() { 
   leftMotor.SetTargetSpeed(0);
   rightMotor.SetTargetSpeed(0);
-//  analogWrite(UPPER_SPEED_PIN, 0); // stop
 }
 
 void stop_intake() {
@@ -85,14 +82,6 @@ Button intakeBeamBreakSensor(BEAM_BREAK_PIN);
 bool checkBeamBreak(void) 
 {
   return intakeBeamBreakSensor.checkButtonPress();
-  // logging function 
-  // if (digitalRead(BEAM_BREAK_PIN) != val) {
-  //   loginfo("Intake beam break changed state to: "+String(digitalRead(BEAM_BREAK_PIN)));
-  //   val = digitalRead(BEAM_BREAK_PIN);
-  // }
-  // // -- 
-
-  // return (digitalRead(BEAM_BREAK_PIN) == 0);
 }
 
 bool verify_intake_complete() {
