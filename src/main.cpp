@@ -37,6 +37,8 @@ enum INTAKE_STATE
   
 INTAKE_STATE intake_state = INTAKE_STATE::INTAKE_IDLE;
 
+EncodedMotor<COIL_ENC_A, COIL_ENC_B, UPPER_SPEED_PIN, UPPER_INVERT_PIN> topMotor;
+
 bool is_disc_present = false;
 //long moved_to_INTAKE_RELEASE_time = millis();
 //bool deposited_disc = false; // flag if this instance of calling the start function has yet deposited a disc
@@ -327,9 +329,11 @@ void check_turntable() {
 
 // // ----- SETUP LOOP -----
 
-void setup() {
+void setup() 
+{
   init_std_node();
   loginfo("setup() Start");
+
   intake_module = init_module("intake",
     start_intake,
     verify_intake_complete,
@@ -341,6 +345,8 @@ void setup() {
     verify_turntable_complete,
     stop_turntable, 
     calibrate_turntable/* TODO: add calibration routine if needed */);
+
+  topMotor.InitializeMotor();
 
   pinMode(LED_BUILTIN, OUTPUT);
 
