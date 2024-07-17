@@ -20,11 +20,17 @@ int INTAKE_INVERT_PIN = D13;
 int UPPER_SPEED_PIN = A1;
 int UPPER_INVERT_PIN = D6;
 
-enum INTAKE_STATE {
+const uint8_t COIL_ENC_A = D7;
+const uint8_t COIL_ENC_B = D8;
+
+enum INTAKE_STATE 
+{
   INTAKE_IDLE = 0,
-  INTAKE_SEND = 1, // sending a disc out of the intake onto the conveyor 
+  INTAKE_SEND = 1,    // sending a disc out of the intake onto the conveyor 
   INTAKE_RECEIVE = 2, // getting a disc from the top conveyor into the intake 
-  };
+  INTAKE_SYNC = 3,   // for Miya's coils -- we need to make sure they stay aligned
+};
+  
 INTAKE_STATE intake_state = INTAKE_STATE::INTAKE_IDLE;
 
 bool is_disc_present = false;
