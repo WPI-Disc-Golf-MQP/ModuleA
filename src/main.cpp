@@ -6,6 +6,8 @@
 #include <std_msgs/Empty.h>
 #include <Arduino.h>
 
+#include <event_timer.h>
+EventTimer intakeTimer;
 
 // ----- INTAKE -----  
 MODULE* intake_module;

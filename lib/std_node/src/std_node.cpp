@@ -8,6 +8,7 @@
 #include <std_msgs/String.h>
 #include <std_msgs/Int8.h>
 #include <functional>
+#include <vector>
 
 #ifndef NODE_NAME
     #define NODE_NAME String("std_node")
