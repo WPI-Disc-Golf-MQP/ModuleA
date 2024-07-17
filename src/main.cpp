@@ -316,13 +316,6 @@ void check_turntable() {
   turntable_module->publish_state((int) turntable_state);
 };
 
-
-// void foo() { // blink for testing
-//     digitalWrite(LED_BUILTIN, HIGH);
-//     delay(10);
-//     digitalWrite(LED_BUILTIN, LOW);
-// }
-
 // // ----- SETUP LOOP -----
 
 void setup() 
