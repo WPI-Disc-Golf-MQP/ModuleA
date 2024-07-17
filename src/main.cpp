@@ -21,23 +21,28 @@ const uint8_t BEAM_BREAK_PIN = D2;
 const uint8_t INTAKE_SPEED_PIN = A0;
 const uint8_t INTAKE_INVERT_PIN = D13;
 
-const uint8_t UPPER_SPEED_PIN = A1;
-const uint8_t UPPER_INVERT_PIN = D6;
+const uint8_t LEFT_SPEED_PIN = A1;
+const uint8_t LEFT_DIR_PIN = D6;
+const uint8_t LEFT_ENC_A = D7;
+const uint8_t LEFT_ENC_B = D8;
 
-const uint8_t COIL_ENC_A = D7;
-const uint8_t COIL_ENC_B = D8;
+const uint8_t RIGHT_SPEED_PIN = A2;
+const uint8_t RIGHT_DIR_PIN = D9;
+const uint8_t RIGHT_ENC_A = D3;
+const uint8_t RIGHT_ENC_B = D4;
 
 enum INTAKE_STATE 
 {
   INTAKE_IDLE = 0,
   INTAKE_SEND = 1,    // sending a disc out of the intake onto the conveyor 
   INTAKE_RECEIVE = 2, // getting a disc from the top conveyor into the intake 
-  INTAKE_SYNC = 3,   // for Miya's coils -- we need to make sure they stay aligned
+  INTAKE_SYNC = 3,    // for Miya's coils -- we need to make sure they stay aligned
 };
   
 INTAKE_STATE intake_state = INTAKE_STATE::INTAKE_IDLE;
 
-EncodedMotor<COIL_ENC_A, COIL_ENC_B, UPPER_SPEED_PIN, UPPER_INVERT_PIN> topMotor;
+EncodedMotor<LEFT_ENC_A , LEFT_ENC_B , LEFT_SPEED_PIN , LEFT_DIR_PIN >  leftMotor;
+EncodedMotor<RIGHT_ENC_A, RIGHT_ENC_B, RIGHT_SPEED_PIN, RIGHT_DIR_PIN> rightMotor;
 
 bool is_disc_present = false;
 //long moved_to_INTAKE_RELEASE_time = millis();
@@ -55,12 +60,16 @@ void intake_motor_stop() {
 
 void top_motor_start(int speed = 230) 
 { 
-  digitalWrite(UPPER_INVERT_PIN, LOW);
-  analogWrite(UPPER_SPEED_PIN, speed); // start
+  leftMotor.SetTargetSpeed(50);
+  rightMotor.SetTargetSpeed(50);
+  // digitalWrite(UPPER_INVERT_PIN, LOW);
+  // analogWrite(UPPER_SPEED_PIN, speed); // start
 }
 
 void top_motor_stop() { 
-  analogWrite(UPPER_SPEED_PIN, 0); // stop
+  leftMotor.SetTargetSpeed(0);
+  rightMotor.SetTargetSpeed(0);
+//  analogWrite(UPPER_SPEED_PIN, 0); // stop
 }
 
 void stop_intake() {

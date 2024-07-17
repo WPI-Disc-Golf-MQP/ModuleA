@@ -129,7 +129,6 @@ template <uint8_t encA, uint8_t encB, uint8_t PWM, uint8_t DIR> class EncodedMot
 public:
     Encoder<encA, encB> encoder;
 
-protected:
     /**
      * Sets the target speed in "encoder ticks/16 ms interval"
      * */
