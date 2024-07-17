@@ -74,6 +74,10 @@ protected:
     float Ki = 0.5;
     float Kd = 0;
 
+    /**
+     * Normally, we'd use a hardware timer, but the STM32 is new to me, 
+     * so just using software timer for now.
+     */
     EventTimer speedTimer = EventTimer(20);
 
     int16_t maxEffort = 255;
@@ -83,7 +87,7 @@ protected:
 
     /**
      * This is the speed of the motor, in "encoder counts / encoder interval".
-     * The encoder interval is set in Robot::InitializeMotorControlTimer.
+     * The encoder interval is set by the motorTimer above.
      */ 
     volatile int16_t speed = 0;
 
@@ -169,7 +173,7 @@ public:
     */
     void ControlMotorSpeed(void)
     {
-        if(speedTimer.checkExpired(true))
+        if(speedTimer.checkExpired(true)) // true tells it to restart automatically
         {
             speed = encoder.CalcEncoderDelta();
             if(ctrlMode == CTRL_SPEED)
