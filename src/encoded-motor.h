@@ -88,6 +88,11 @@ public:
         }
     }
 
+    bool checkTargetReached(void)
+    {
+        return targetReached; // (needs a proper checker...)
+    }
+
     friend class MotorBase;
 };
 
@@ -207,6 +212,7 @@ public:
         if(speedTimer.checkExpired(true)) // true tells it to restart automatically
         {
             speed = encoder.CalcEncoderDelta();
+
             if(ctrlMode == CTRL_SPEED || ctrlMode == CTRL_POS)
             {
                 // Calculate the error in speed
@@ -224,10 +230,21 @@ public:
 
     void moveFor(int16_t speed, int16_t delta)
     {
-        SetTargetSpeed(speed);
+        targetSpeed = speed;
         int16_t currCount = encoder.getCount();
         encoder.setTargetCount( currCount + delta );
         ctrlMode = CTRL_POS;
+    }
+
+    bool checkMotionComplete(void)
+    {
+        bool retVal = false;
+        if(ctrlMode == CTRL_POS)
+        {
+            if(encoder.checkTargetReached()) retVal = true; // needs a proper checker...
+        }
+
+        return retVal;
     }
 };
 

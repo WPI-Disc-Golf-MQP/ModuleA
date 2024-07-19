@@ -207,6 +207,15 @@ void handleIntakeTimer(void)
   }
 }
 
+void handleMotionComplete(void)
+{
+  if(intake_state == INTAKE_STATE::INTAKE_SYNC)
+  {
+    top_motor_stop();
+    intake_state = INTAKE_STATE::INTAKE_IDLE;
+  }
+}
+
 
 // ----- CAMERA TURNTABLE ----- 
 
@@ -391,6 +400,9 @@ void loop() {
   // Intake events
   if(checkBeamBreak()) handleBeamBreak();
   if(intakeTimer.checkExpired()) handleIntakeTimer();
+  if(leftMotor.checkMotionComplete()) handleMotionComplete();
+  if(rightMotor.checkMotionComplete()) handleMotionComplete();
+
   leftMotor.ControlMotorSpeed();
   rightMotor.ControlMotorSpeed();
 
