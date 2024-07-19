@@ -10,16 +10,26 @@ protected:
     volatile static int16_t prevCount;
     volatile static int16_t encCount;
 
+    // Used to allow positioning (for example, to sync up motors)
+    volatile static int16_t targetCount;
+    volatile static bool targetReached;
+
+protected:
+
     static void ProcessEncoderTickA(void) 
     {
         if(digitalRead(encA) == digitalRead(encB)) encCount++;
         else encCount--;
+
+        if(encCount == targetCount) targetReached = true;
     }
 
     static void ProcessEncoderTickB(void) 
     {
         if(digitalRead(encA) == digitalRead(encB)) encCount--;
         else encCount++;
+
+        if(encCount == targetCount) targetReached = true;
     }
 
 public:
@@ -52,6 +62,12 @@ public:
         interrupts();
         return tempCount;
     }
+    
+    void setTargetCount(int16_t count)
+    {
+        targetCount = count;
+        targetReached = false;
+    }
 
     void InitializeEncoder(void)
     {    
@@ -71,6 +87,8 @@ public:
             attachInterrupt(digitalPinToInterrupt(encB), ProcessEncoderTickB, CHANGE); // interrupt
         }
     }
+
+    friend class MotorBase;
 };
 
 class MotorBase
@@ -95,9 +113,6 @@ protected:
 
     // Used to keep track of the target speed, also in counts / interval.
     float targetSpeed = 0;
-
-    // Used to allow positioning (for example, to sync up motors)
-    int16_t targetCount = 0;
 
     /**
      * This is the speed of the motor, in "encoder counts / encoder interval".
@@ -192,7 +207,7 @@ public:
         if(speedTimer.checkExpired(true)) // true tells it to restart automatically
         {
             speed = encoder.CalcEncoderDelta();
-            if(ctrlMode == CTRL_SPEED)
+            if(ctrlMode == CTRL_SPEED || ctrlMode == CTRL_POS)
             {
                 // Calculate the error in speed
                 int16_t error = targetSpeed - speed;
@@ -209,11 +224,15 @@ public:
 
     void moveFor(int16_t speed, int16_t delta)
     {
+        SetTargetSpeed(speed);
         int16_t currCount = encoder.getCount();
-        targetCount = currCount + delta;
+        encoder.setTargetCount( currCount + delta );
         ctrlMode = CTRL_POS;
     }
 };
 
-template <uint8_t encXOR, uint8_t encB> volatile int16_t Encoder<encXOR, encB>::prevCount = 0;
-template <uint8_t encXOR, uint8_t encB> volatile int16_t Encoder<encXOR, encB>::encCount = 0;
+template <uint8_t encA, uint8_t encB> volatile int16_t Encoder<encA, encB>::prevCount = 0;
+template <uint8_t encA, uint8_t encB> volatile int16_t Encoder<encA, encB>::encCount = 0;
+template <uint8_t encA, uint8_t encB> volatile int16_t Encoder<encA, encB>::targetCount = 0;
+template <uint8_t encA, uint8_t encB> volatile bool Encoder<encA, encB>::targetReached = false;
+
