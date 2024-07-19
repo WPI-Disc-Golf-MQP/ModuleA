@@ -47,9 +47,9 @@ public:
      * */
     int16_t getCount(void)
     {
-        cli();
+        noInterrupts();
         int16_t tempCount = count;
-        sei();
+        interrupts();
         return tempCount;
     }
 
