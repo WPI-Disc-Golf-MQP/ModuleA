@@ -42,6 +42,18 @@ public:
         return speed;
     }
 
+    /**
+     * Returns the current encoder count.
+     * */
+    int16_t getCount(void)
+    {
+        cli();
+        int16_t tempCount = count;
+        sei();
+        return tempCount;
+    }
+
+
     void InitializeEncoder(void)
     {    
         // Set the pins as pulled-up inputs.
