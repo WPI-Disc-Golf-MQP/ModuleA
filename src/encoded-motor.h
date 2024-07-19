@@ -48,11 +48,10 @@ public:
     int16_t getCount(void)
     {
         noInterrupts();
-        int16_t tempCount = count;
+        int16_t tempCount = encCount;
         interrupts();
         return tempCount;
     }
-
 
     void InitializeEncoder(void)
     {    
