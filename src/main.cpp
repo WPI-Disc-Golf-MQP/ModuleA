@@ -171,8 +171,22 @@ void handleBeamBreak(void)
     top_motor_stop();
     //intake_motor_stop();  // not needed here
     
-    intake_module->publish_status(MODULE_STATUS::COMPLETE);
-    intake_state = INTAKE_STATE::INTAKE_IDLE;
+    //intake_module->publish_status(MODULE_STATUS::COMPLETE);
+    int16_t delta = leftMotor.getCount() - rightMotor.getCount();
+    if(delta > 10) 
+    {
+      rightMotor.moveFor(5, delta);
+      intake_state = INTAKE_STATE::INTAKE_SYNC;
+    }
+    else if (delta < -10) 
+    {
+      leftMotor.moveFor(5, -delta);
+      intake_state = INTAKE_STATE::INTAKE_SYNC;
+    }
+    else //close enough
+    {
+      intake_state = INTAKE_STATE::INTAKE_IDLE;
+    }
   } 
 }
 
@@ -189,8 +203,6 @@ void handleIntakeTimer(void)
     intake_state = INTAKE_STATE::INTAKE_RECEIVE;
   }
 }
-
-
 
 
 // ----- CAMERA TURNTABLE ----- 

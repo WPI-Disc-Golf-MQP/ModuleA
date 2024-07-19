@@ -77,7 +77,7 @@ class MotorBase
 {
 protected: 
     // Used to control the motors in different ways
-    enum CTRL_MODE : uint8_t {CTRL_DIRECT, CTRL_SPEED};
+    enum CTRL_MODE : uint8_t {CTRL_DIRECT, CTRL_SPEED, CTRL_POS};
     volatile CTRL_MODE ctrlMode = CTRL_DIRECT;
 
     // Used to manage PID coefficients;
@@ -95,6 +95,9 @@ protected:
 
     // Used to keep track of the target speed, also in counts / interval.
     float targetSpeed = 0;
+
+    // Used to allow positioning (for example, to sync up motors)
+    int16_t targetCount = 0;
 
     /**
      * This is the speed of the motor, in "encoder counts / encoder interval".
@@ -159,6 +162,8 @@ public:
         encoder.InitializeEncoder();
     }
 
+    int16_t getCount(void) { return encoder.getCount(); }
+
 protected:
     void SetEffort(int16_t effort)
     {
@@ -200,6 +205,13 @@ public:
                 SetEffort(effort);
             }
         }
+    }
+
+    void moveFor(int16_t speed, int16_t delta)
+    {
+        int16_t currCount = encoder.getCount();
+        targetCount = currCount + delta;
+        ctrlMode = CTRL_POS;
     }
 };
 
