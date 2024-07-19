@@ -16,20 +16,20 @@ EventTimer intakeTimer;
 // ----- INTAKE -----  
 MODULE* intake_module;
 
-const uint8_t BEAM_BREAK_PIN = D2;
+const uint8_t BEAM_BREAK_PIN = A6;
 
-const uint8_t INTAKE_SPEED_PIN = A0;
-const uint8_t INTAKE_INVERT_PIN = D13;
+const uint8_t INTAKE_SPEED_PIN = -1;
+const uint8_t INTAKE_INVERT_PIN = -1;
 
-const uint8_t LEFT_SPEED_PIN = A1;
-const uint8_t LEFT_DIR_PIN = D6; // not actually needed
-const uint8_t LEFT_ENC_A = D7;
-const uint8_t LEFT_ENC_B = D8;
+const uint8_t LEFT_SPEED_PIN = D6;
+const uint8_t LEFT_DIR_PIN = ; // not actually needed
+const uint8_t LEFT_ENC_A = A3;
+const uint8_t LEFT_ENC_B = A5;
 
-const uint8_t RIGHT_SPEED_PIN = A2;
-const uint8_t RIGHT_DIR_PIN = D9; // not actually needed
-const uint8_t RIGHT_ENC_A = D3;
-const uint8_t RIGHT_ENC_B = D4;
+const uint8_t RIGHT_SPEED_PIN = D5;
+const uint8_t RIGHT_DIR_PIN = ; // not actually needed
+const uint8_t RIGHT_ENC_A = A1;
+const uint8_t RIGHT_ENC_B = A2;
 
 enum INTAKE_STATE 
 {
