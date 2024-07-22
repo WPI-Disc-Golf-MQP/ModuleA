@@ -10,16 +10,26 @@ protected:
     volatile static int16_t prevCount;
     volatile static int16_t encCount;
 
+    // Used to allow positioning (for example, to sync up motors)
+    volatile static int16_t targetCount;
+    volatile static bool targetReached;
+
+protected:
+
     static void ProcessEncoderTickA(void) 
     {
         if(digitalRead(encA) == digitalRead(encB)) encCount++;
         else encCount--;
+
+        if(encCount == targetCount) targetReached = true;
     }
 
     static void ProcessEncoderTickB(void) 
     {
         if(digitalRead(encA) == digitalRead(encB)) encCount--;
         else encCount++;
+
+        if(encCount == targetCount) targetReached = true;
     }
 
 public:
@@ -42,6 +52,23 @@ public:
         return speed;
     }
 
+    /**
+     * Returns the current encoder count.
+     * */
+    int16_t getCount(void)
+    {
+        noInterrupts();
+        int16_t tempCount = encCount;
+        interrupts();
+        return tempCount;
+    }
+    
+    void setTargetCount(int16_t count)
+    {
+        targetCount = count;
+        targetReached = false;
+    }
+
     void InitializeEncoder(void)
     {    
         // Set the pins as pulled-up inputs.
@@ -60,13 +87,20 @@ public:
             attachInterrupt(digitalPinToInterrupt(encB), ProcessEncoderTickB, CHANGE); // interrupt
         }
     }
+
+    bool checkTargetReached(void)
+    {
+        return targetReached; // (needs a proper checker...)
+    }
+
+    friend class MotorBase;
 };
 
 class MotorBase
 {
 protected: 
     // Used to control the motors in different ways
-    enum CTRL_MODE : uint8_t {CTRL_DIRECT, CTRL_SPEED};
+    enum CTRL_MODE : uint8_t {CTRL_DIRECT, CTRL_SPEED, CTRL_POS};
     volatile CTRL_MODE ctrlMode = CTRL_DIRECT;
 
     // Used to manage PID coefficients;
@@ -148,6 +182,8 @@ public:
         encoder.InitializeEncoder();
     }
 
+    int16_t getCount(void) { return encoder.getCount(); }
+
 protected:
     void SetEffort(int16_t effort)
     {
@@ -176,7 +212,8 @@ public:
         if(speedTimer.checkExpired(true)) // true tells it to restart automatically
         {
             speed = encoder.CalcEncoderDelta();
-            if(ctrlMode == CTRL_SPEED)
+
+            if(ctrlMode == CTRL_SPEED || ctrlMode == CTRL_POS)
             {
                 // Calculate the error in speed
                 int16_t error = targetSpeed - speed;
@@ -190,7 +227,29 @@ public:
             }
         }
     }
+
+    void moveFor(int16_t speed, int16_t delta)
+    {
+        targetSpeed = speed;
+        int16_t currCount = encoder.getCount();
+        encoder.setTargetCount( currCount + delta );
+        ctrlMode = CTRL_POS;
+    }
+
+    bool checkMotionComplete(void)
+    {
+        bool retVal = false;
+        if(ctrlMode == CTRL_POS)
+        {
+            if(encoder.checkTargetReached()) retVal = true; // needs a proper checker...
+        }
+
+        return retVal;
+    }
 };
 
-template <uint8_t encXOR, uint8_t encB> volatile int16_t Encoder<encXOR, encB>::prevCount = 0;
-template <uint8_t encXOR, uint8_t encB> volatile int16_t Encoder<encXOR, encB>::encCount = 0;
+template <uint8_t encA, uint8_t encB> volatile int16_t Encoder<encA, encB>::prevCount = 0;
+template <uint8_t encA, uint8_t encB> volatile int16_t Encoder<encA, encB>::encCount = 0;
+template <uint8_t encA, uint8_t encB> volatile int16_t Encoder<encA, encB>::targetCount = 0;
+template <uint8_t encA, uint8_t encB> volatile bool Encoder<encA, encB>::targetReached = false;
+

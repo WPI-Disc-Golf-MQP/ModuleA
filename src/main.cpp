@@ -168,11 +168,28 @@ void handleBeamBreak(void)
   if(intake_state == INTAKE_STATE::INTAKE_RECEIVE)
   {
     is_disc_present = true; //why?
-    top_motor_stop();
+    //top_motor_stop();
     //intake_motor_stop();  // not needed here
     
-    intake_module->publish_status(MODULE_STATUS::COMPLETE);
-    intake_state = INTAKE_STATE::INTAKE_IDLE;
+    //intake_module->publish_status(MODULE_STATUS::COMPLETE);
+    int16_t delta = leftMotor.getCount() - rightMotor.getCount();
+    if(delta > 10) 
+    {
+      leftMotor.SetTargetSpeed(0);
+      rightMotor.moveFor(5, delta);
+      intake_state = INTAKE_STATE::INTAKE_SYNC;
+    }
+    else if (delta < -10) 
+    {
+      rightMotor.SetTargetSpeed(0);
+      leftMotor.moveFor(5, -delta);
+      intake_state = INTAKE_STATE::INTAKE_SYNC;
+    }
+    else //close enough
+    {
+      top_motor_stop();
+      intake_state = INTAKE_STATE::INTAKE_IDLE;
+    }
   } 
 }
 
@@ -190,7 +207,14 @@ void handleIntakeTimer(void)
   }
 }
 
-
+void handleMotionComplete(void)
+{
+  if(intake_state == INTAKE_STATE::INTAKE_SYNC)
+  {
+    top_motor_stop();
+    intake_state = INTAKE_STATE::INTAKE_IDLE;
+  }
+}
 
 
 // // ----- CAMERA TURNTABLE ----- 
@@ -376,6 +400,9 @@ void loop() {
   // Intake events
   if(checkBeamBreak()) handleBeamBreak();
   if(intakeTimer.checkExpired()) handleIntakeTimer();
+  if(leftMotor.checkMotionComplete()) handleMotionComplete();
+  if(rightMotor.checkMotionComplete()) handleMotionComplete();
+
   leftMotor.ControlMotorSpeed();
   rightMotor.ControlMotorSpeed();
 
