@@ -171,7 +171,7 @@ void handleBeamBreak(void)
     //top_motor_stop();
     //intake_motor_stop();  // not needed here
     
-    //intake_module->publish_status(MODULE_STATUS::COMPLETE);
+    intake_module->publish_status(MODULE_STATUS::COMPLETE);
     int16_t delta = leftMotor.getCount() - rightMotor.getCount();
     if(false) {}
     // if(delta > 10) 
@@ -406,6 +406,7 @@ void loop() {
 
   leftMotor.ControlMotorSpeed();
   rightMotor.ControlMotorSpeed();
+
 
   // check_turntable();
 }
