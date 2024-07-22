@@ -68,6 +68,8 @@ void top_motor_start(int speed = 20)
 
 void top_motor_stop() 
 { 
+  loginfo("Stopping top motors.");
+
   leftMotor.SetTargetSpeed(0);
   rightMotor.SetTargetSpeed(0);
 }
@@ -168,29 +170,11 @@ void handleBeamBreak(void)
   if(intake_state == INTAKE_STATE::INTAKE_RECEIVE)
   {
     is_disc_present = true; //why?
-    //top_motor_stop();
+    top_motor_stop();
     //intake_motor_stop();  // not needed here
     
     intake_module->publish_status(MODULE_STATUS::COMPLETE);
-    int16_t delta = leftMotor.getCount() - rightMotor.getCount();
-    if(false) {}
-    // if(delta > 10) 
-    // {
-    //   leftMotor.SetTargetSpeed(0);
-    //   rightMotor.moveFor(5, delta);
-    //   intake_state = INTAKE_STATE::INTAKE_SYNC;
-    // }
-    // else if (delta < -10) 
-    // {
-    //   rightMotor.SetTargetSpeed(0);
-    //   leftMotor.moveFor(5, -delta);
-    //   intake_state = INTAKE_STATE::INTAKE_SYNC;
-    // }
-    else //close enough
-    {
-      top_motor_stop();
-      intake_state = INTAKE_STATE::INTAKE_IDLE;
-    }
+    intake_state = INTAKE_STATE::INTAKE_IDLE;
   } 
 }
 
