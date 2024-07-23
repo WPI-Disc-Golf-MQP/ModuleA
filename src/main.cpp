@@ -22,10 +22,10 @@ MODULE* intake_module;
 #define INTAKE_INVERT_PIN D13
 
 #define LEFT_SPEED_PIN D5
-#define LEFT_ENC_A A3 //choose four pins with interupts
+#define LEFT_ENC_A A3 
 #define LEFT_ENC_B A7
 
-#define RIGHT_SPEED_PIN D6 //choose two pins 
+#define RIGHT_SPEED_PIN D6 
 #define RIGHT_ENC_A A1
 #define RIGHT_ENC_B A2
 
@@ -377,7 +377,8 @@ void setup()
 }
 
 // ----- ros -----
-void loop() {
+void loop() 
+{
   periodic_status();
   nh.spinOnce();
 
@@ -392,4 +393,3 @@ void loop() {
 
   // check_turntable();
 }
-
