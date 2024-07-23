@@ -133,6 +133,7 @@ protected:
      */
     virtual void SetEffort(int16_t effort) = 0;
 
+public:
     /** Used to set the motor effort directly. 
      * 
      * Calling this function will switch the control mode, if needed. 
@@ -198,11 +199,13 @@ public:
     /**
      * This is where you'll put the guts of your motor code
     */
-    void ControlMotorSpeed(void)
+    bool ControlMotorSpeed(void)
     {
+        bool retVal = false;
         if(speedTimer.checkExpired(true)) // true tells it to restart automatically
         {
             speed = encoder.CalcEncoderDelta();
+            retVal = true;
 
             if(ctrlMode == CTRL_SPEED || ctrlMode == CTRL_POS)
             {
@@ -217,6 +220,8 @@ public:
                 SetEffort(effort);
             }
         }
+
+        return retVal;
     }
 
     void moveFor(int16_t speed, int16_t delta)

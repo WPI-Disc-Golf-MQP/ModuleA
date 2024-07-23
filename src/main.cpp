@@ -23,7 +23,7 @@ MODULE* intake_module;
 
 #define LEFT_SPEED_PIN D5
 #define LEFT_ENC_A A3 
-#define LEFT_ENC_B A7
+#define LEFT_ENC_B A4
 
 #define RIGHT_SPEED_PIN D6 
 #define RIGHT_ENC_A A1
@@ -68,8 +68,8 @@ void top_motor_stop()
 { 
   loginfo("Stopping top motors.");
 
-  leftMotor.SetTargetSpeed(0);
-  rightMotor.SetTargetSpeed(0);
+  leftMotor.SetMotorEffortDirect(0);
+  rightMotor.SetMotorEffortDirect(0);
 }
 
 void stop_intake() 
@@ -388,8 +388,17 @@ void loop()
   if(leftMotor.checkMotionComplete()) handleMotionComplete();
   if(rightMotor.checkMotionComplete()) handleMotionComplete();
 
-  leftMotor.ControlMotorSpeed();
-  rightMotor.ControlMotorSpeed();
-
+  // Call the motor speed controllers on a regular basis
+  if(leftMotor.ControlMotorSpeed())
+  {
+//    String speedLog(String("left count: ") + String(leftMotor.getCount()));
+//    loginfo(speedLog.c_str());
+  }
+  if(rightMotor.ControlMotorSpeed())
+  {
+//    String speedLog(String("right count: ") + String(rightMotor.getCount()));
+//    loginfo(speedLog.c_str());
+  }
+  
   // check_turntable();
 }
