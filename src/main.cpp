@@ -21,12 +21,12 @@ const uint8_t BEAM_BREAK_PIN = A6;
 const uint8_t INTAKE_SPEED_PIN = A0;
 const uint8_t INTAKE_INVERT_PIN = D13;
 
-const uint8_t LEFT_SPEED_PIN = D5;
+const uint8_t LEFT_SPEED_PIN = D6;
 const uint8_t LEFT_DIR_PIN = 1; // not actually needed
 const uint8_t LEFT_ENC_A = A3; //choose four pins with interupts
-const uint8_t LEFT_ENC_B = A5;
+const uint8_t LEFT_ENC_B = A4;
 
-const uint8_t RIGHT_SPEED_PIN = D6;//choose two pins 
+const uint8_t RIGHT_SPEED_PIN = D5;//choose two pins 
 const uint8_t RIGHT_DIR_PIN = 1; // not actually needed
 const uint8_t RIGHT_ENC_A = A1;
 const uint8_t RIGHT_ENC_B = A2;
@@ -175,6 +175,7 @@ void handleBeamBreak(void)
     
     intake_module->publish_status(MODULE_STATUS::COMPLETE);
     intake_state = INTAKE_STATE::INTAKE_IDLE;
+    loginfo("should be stopping");
   } 
 }
 
