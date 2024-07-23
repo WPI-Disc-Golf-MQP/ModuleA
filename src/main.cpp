@@ -173,6 +173,7 @@ void handleBeamBreak(void)
     
     intake_module->publish_status(MODULE_STATUS::COMPLETE);
     intake_state = INTAKE_STATE::INTAKE_IDLE;
+    loginfo("should be stopping");
   } 
 }
 
