@@ -355,8 +355,6 @@ void setup()
   leftMotor.InitializeMotor();
   rightMotor.InitializeMotor();
 
-  pinMode(LED_BUILTIN, OUTPUT);
-
   // intake pins 
   intakeBeamBreakSensor.init();
   //pinMode(BEAM_BREAK_PIN, INPUT_PULLUP) ;
