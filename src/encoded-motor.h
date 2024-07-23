@@ -147,7 +147,7 @@ public:
     void SetPIDCoeffs(float p, float i, float d) {Kp = p; Ki = i; Kd = d; sumError = 0;}
 };
 
-template <uint8_t encA, uint8_t encB, uint8_t PWM, uint8_t DIR> class EncodedMotor
+template <uint8_t encA, uint8_t encB, uint8_t PWM> class EncodedMotor
     : public MotorBase
 {
 public:
@@ -176,7 +176,6 @@ public:
 public:
     void InitializeMotor(void)
     {
-        digitalWrite(DIR, LOW);
         analogWrite(PWM, 0);
 
         encoder.InitializeEncoder();
@@ -187,19 +186,11 @@ public:
 protected:
     void SetEffort(int16_t effort)
     {
-        bool reverse = 0;
-
-        if (effort < 0)
-        {
-            effort = -effort; // Make speed a positive quantity.
-            reverse = 1;      // Reverse the direction.
-        }
+        if (effort < 0) effort = 0;
         if (effort > maxEffort)
         {
             effort = maxEffort;
         }
-
-        digitalWrite(DIR, reverse);
         analogWrite(PWM, effort);
     }
 

@@ -16,20 +16,18 @@ EventTimer intakeTimer;
 // ----- INTAKE -----  
 MODULE* intake_module;
 
-const uint8_t BEAM_BREAK_PIN = A6;
+#define BEAM_BREAK_PIN A6
 
-const uint8_t INTAKE_SPEED_PIN = A0;
-const uint8_t INTAKE_INVERT_PIN = D13;
+#define INTAKE_SPEED_PIN A0
+#define INTAKE_INVERT_PIN D13
 
-const uint8_t LEFT_SPEED_PIN = D5;
-const uint8_t LEFT_DIR_PIN = 1; // not actually needed
-const uint8_t LEFT_ENC_A = A3; //choose four pins with interupts
-const uint8_t LEFT_ENC_B = A5;
+#define LEFT_SPEED_PIN D5
+#define LEFT_ENC_A A3 //choose four pins with interupts
+#define LEFT_ENC_B A7
 
-const uint8_t RIGHT_SPEED_PIN = D6;//choose two pins 
-const uint8_t RIGHT_DIR_PIN = 1; // not actually needed
-const uint8_t RIGHT_ENC_A = A1;
-const uint8_t RIGHT_ENC_B = A2;
+#define RIGHT_SPEED_PIN D6 //choose two pins 
+#define RIGHT_ENC_A A1
+#define RIGHT_ENC_B A2
 
 enum INTAKE_STATE 
 {
@@ -44,8 +42,8 @@ INTAKE_STATE intake_state = INTAKE_STATE::INTAKE_IDLE;
 /**
  * Using template classes for the motors, which makes setting up interrupts easier.
  */
-EncodedMotor<LEFT_ENC_A , LEFT_ENC_B , LEFT_SPEED_PIN , LEFT_DIR_PIN >  leftMotor;
-EncodedMotor<RIGHT_ENC_A, RIGHT_ENC_B, RIGHT_SPEED_PIN, RIGHT_DIR_PIN> rightMotor;
+EncodedMotor<LEFT_ENC_A , LEFT_ENC_B , LEFT_SPEED_PIN >  leftMotor;
+EncodedMotor<RIGHT_ENC_A, RIGHT_ENC_B, RIGHT_SPEED_PIN> rightMotor;
 
 bool is_disc_present = false;
 
@@ -390,7 +388,6 @@ void loop() {
 
   leftMotor.ControlMotorSpeed();
   rightMotor.ControlMotorSpeed();
-
 
   // check_turntable();
 }
