@@ -237,7 +237,10 @@ public:
         bool retVal = false;
         if(ctrlMode == CTRL_POS)
         {
-            if(encoder.checkTargetReached()) retVal = true; // needs a proper checker...
+            if(encoder.checkTargetReached()) 
+            {
+                retVal = true; // needs a proper checker...
+            }
         }
 
         return retVal;

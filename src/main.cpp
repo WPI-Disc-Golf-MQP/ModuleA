@@ -169,13 +169,30 @@ void handleBeamBreak(void)
   {
     is_disc_present = true; //why?
     top_motor_stop();
-    //intake_motor_stop();  // not needed here
-    
-    intake_module->publish_status(MODULE_STATUS::COMPLETE);
-    intake_state = INTAKE_STATE::INTAKE_IDLE;
-    loginfo("should be stopping");
+
+    int16_t encoderDelta = rightMotor.encoder.getCount() - leftMotor.encoder.getCount();
+    if(encoderDelta > 0) //move left
+    {
+      leftMotor.moveFor(10, encoderDelta);
+      loginfo("-> LEFT-SYNC");
+      intake_state = INTAKE_STATE::INTAKE_SYNC;
+    }
+    else if(encoderDelta < 0) //move right
+    {
+      rightMotor.moveFor(10, -encoderDelta);  
+      loginfo("-> RIGHT-SYNC");
+      intake_state = INTAKE_STATE::INTAKE_SYNC;
+    }
+
+    else //they are equal
+    {
+      intake_state = INTAKE_STATE::INTAKE_IDLE;
+      intake_module->publish_status(MODULE_STATUS::COMPLETE);
+      loginfo("-> IDLE");
+    }
   } 
 }
+
 
 void handleIntakeTimer(void)
 {
@@ -191,15 +208,16 @@ void handleIntakeTimer(void)
   }
 }
 
-void handleMotionComplete(void)
+void handleSyncComplete(void)
 {
   if(intake_state == INTAKE_STATE::INTAKE_SYNC)
   {
     top_motor_stop();
     intake_state = INTAKE_STATE::INTAKE_IDLE;
+    intake_module->publish_status(MODULE_STATUS::COMPLETE);
+    loginfo("-> IDLE");
   }
 }
-
 
 // // ----- CAMERA TURNTABLE ----- 
 
@@ -381,10 +399,9 @@ void loop()
   nh.spinOnce();
 
   // Intake events
-  if(checkBeamBreak()) handleBeamBreak();
   if(intakeTimer.checkExpired()) handleIntakeTimer();
-  if(leftMotor.checkMotionComplete()) handleMotionComplete();
-  if(rightMotor.checkMotionComplete()) handleMotionComplete();
+  if(checkBeamBreak()) handleBeamBreak();
+  if(leftMotor.checkMotionComplete() && rightMotor.checkMotionComplete()) handleSyncComplete();
 
   // Call the motor speed controllers on a regular basis
   if(leftMotor.ControlMotorSpeed())
