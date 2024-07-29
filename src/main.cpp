@@ -171,6 +171,8 @@ void handleBeamBreak(void)
     top_motor_stop();
 
     int16_t encoderDelta = rightMotor.encoder.getCount() - leftMotor.encoder.getCount();
+    String msg = String("N=") + String(encoderDelta);
+    loginfo(msg.c_str());    
     if(encoderDelta > 0) //move left
     {
       leftMotor.moveFor(10, encoderDelta);
