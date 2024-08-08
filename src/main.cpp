@@ -212,6 +212,7 @@ void handleIntakeTimer(void)
 
 void handleSyncComplete(void)
 {
+  loginfo("Sync");
   if(intake_state == INTAKE_STATE::INTAKE_SYNC)
   {
     top_motor_stop();
@@ -403,7 +404,15 @@ void loop()
   // Intake events
   if(intakeTimer.checkExpired()) handleIntakeTimer();
   if(checkBeamBreak()) handleBeamBreak();
-  if(leftMotor.checkMotionComplete() && rightMotor.checkMotionComplete()) handleSyncComplete();
+
+  bool leftComplete = leftMotor.checkMotionComplete();
+  bool rightComplete = rightMotor.checkMotionComplete();
+
+  String complete = String(leftComplete) + String(",") + String(rightComplete);
+  if(intake_state == INTAKE_STATE::INTAKE_SYNC) loginfo(complete.c_str());
+
+  if(leftComplete) handleSyncComplete();
+  if(rightComplete) handleSyncComplete();
 
   // Call the motor speed controllers on a regular basis
   if(leftMotor.ControlMotorSpeed())
