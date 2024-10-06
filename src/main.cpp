@@ -11,10 +11,12 @@
 MODULE* intake_module;
 
 int BEAM_BREAK_PIN = D2;
-int INTAKE_SPEED_PIN = A0;
+int INTAKE_SPEED_PIN = A0; // Roller next to ramp
 int INTAKE_INVERT_PIN = D13;
-int UPPER_SPEED_PIN = A1;
+int UPPER_SPEED_PIN = A1; // Conveyor
 int UPPER_INVERT_PIN = D6;
+int UPPER_GATE_INVERT_PIN = ##; // Prototype gate for conveyor
+int UPPER_GATE_SPEED_PIN = ##;
 
 enum INTAKE_STATE {
   INTAKE_IDLE = 0,
@@ -27,27 +29,30 @@ bool is_disc_present = false;
 long moved_to_INTAKE_RELEASE_time = millis();
 bool deposited_disc = false; // flag if this instance of calling the start function has yet deposited a disc
 
-void intake_motor_move_forward(int speed = 230) {
-  digitalWrite(INTAKE_INVERT_PIN, LOW);
-  analogWrite(INTAKE_SPEED_PIN, speed); // start
-}
+// void intake_motor_move_forward(int speed = 230) {
+//   digitalWrite(INTAKE_INVERT_PIN, LOW);
+//   analogWrite(INTAKE_SPEED_PIN, speed); // start
+// }
 
-void intake_motor_stop() {
-  analogWrite(INTAKE_SPEED_PIN, 0); // stop
-}
+// void intake_motor_stop() {
+//   analogWrite(INTAKE_SPEED_PIN, 0); // stop
+// }
 
 void top_motor_move_forward(int speed = 230) { 
-  digitalWrite(UPPER_INVERT_PIN, LOW);
-  analogWrite(UPPER_SPEED_PIN, speed); // start
+  // digitalWrite(UPPER_INVERT_PIN, LOW);
+  // analogWrite(UPPER_SPEED_PIN, speed); // start
+  digitalWrite(UPPER_GATE_INVERT_PIN, LOW);
+  analogWrite(UPPER_GATE_SPEED_PIN, speed);
 }
 
 void top_motor_stop() { 
-  analogWrite(UPPER_SPEED_PIN, 0); // stop
+  // analogWrite(UPPER_SPEED_PIN, 0); // stop
+  analogWrite(UPPER_GATE_SPEED_PIN, 0);
 }
 
 void stop_intake() {
   top_motor_stop();
-  intake_motor_stop();
+  // intake_motor_stop();
 }
 
 
@@ -72,12 +77,13 @@ bool verify_intake_complete() {
 void start_intake() {
   loginfo("start_intake");
   // if (is_disc_present) {
-  if (true) { // for now want to only deal with if the disc is present in the intake
-    intake_state = INTAKE_STATE::INTAKE_SEND;
-    moved_to_INTAKE_RELEASE_time = millis();
-    intake_motor_move_forward();
+  // if (true) { // for now want to only deal with if the disc is present in the intake
+  //   intake_state = INTAKE_STATE::INTAKE_SEND;
+  //   moved_to_INTAKE_RELEASE_time = millis();
+    // intake_motor_move_forward();
 
-  } else { // there is no disc, we need one
+  // } else { // there is no disc, we need one
+  if (true) { // for now only want to deal with if disc is needed
     intake_state = INTAKE_STATE::INTAKE_RECIEVE;
     top_motor_move_forward();
   }
@@ -90,7 +96,7 @@ void calibrate_intake() {
 void check_intake() {
   switch (intake_state) {
     case INTAKE_STATE::INTAKE_IDLE: 
-      intake_motor_stop();
+      // intake_motor_stop();
       top_motor_stop();
       break;
     case INTAKE_STATE::INTAKE_SEND: 
@@ -101,7 +107,7 @@ void check_intake() {
         intake_state = INTAKE_STATE::INTAKE_RECIEVE;
         // TODO: add a call to the pi to get how many discs are in the top conveyor. For now, it is just always assuming there is a disc in the top conveyor 
 
-        intake_motor_stop();
+        // intake_motor_stop();
         top_motor_move_forward(); // should also make sure that it does not go under? 
       }
       break;
@@ -128,7 +134,7 @@ void check_intake() {
   intake_module->publish_state((int) intake_state);
   beam_broken();
 }
-
+/* Unneeded for prototype
 // ----- CAMERA TURNTABLE ----- 
 
 MODULE* turntable_module;
@@ -260,7 +266,7 @@ void check_turntable() {
   }
   turntable_module->publish_state((int) turntable_state);
 };
-
+*/
 
 // void foo() { // blink for testing
 //     digitalWrite(LED_BUILTIN, HIGH);
@@ -279,27 +285,27 @@ void setup() {
     stop_intake, 
     calibrate_intake/* TODO: add calibration routine if needed */);
     
-  turntable_module = init_module("turntable",
-    start_turntable,
-    verify_turntable_complete,
-    stop_turntable, 
-    calibrate_turntable/* TODO: add calibration routine if needed */);
+  // turntable_module = init_module("turntable",
+  //   start_turntable,
+  //   verify_turntable_complete,
+  //   stop_turntable, 
+  //   calibrate_turntable/* TODO: add calibration routine if needed */);
 
   pinMode(LED_BUILTIN, OUTPUT);
 
   // intake pins 
   pinMode(BEAM_BREAK_PIN, INPUT_PULLUP) ;
-  pinMode(INTAKE_SPEED_PIN,OUTPUT) ;
-  pinMode(INTAKE_INVERT_PIN, OUTPUT) ;
+  // pinMode(INTAKE_SPEED_PIN,OUTPUT) ;
+  // pinMode(INTAKE_INVERT_PIN, OUTPUT) ;
 
   // camera pins 
-  pinMode(yaxis_motor_step_pin, OUTPUT);
-  pinMode(yaxis_motor_dir_pin, OUTPUT);
-  pinMode(yaxis_motor_enable_pin, OUTPUT);
+  // pinMode(yaxis_motor_step_pin, OUTPUT);
+  // pinMode(yaxis_motor_dir_pin, OUTPUT);
+  // pinMode(yaxis_motor_enable_pin, OUTPUT);
 
-  digitalWrite(yaxis_motor_step_pin, LOW);
-  digitalWrite(yaxis_motor_dir_pin, LOW);
-  digitalWrite(yaxis_motor_enable_pin, LOW);
+  // digitalWrite(yaxis_motor_step_pin, LOW);
+  // digitalWrite(yaxis_motor_dir_pin, LOW);
+  // digitalWrite(yaxis_motor_enable_pin, LOW);
 
 
   loginfo("setup() Complete");
