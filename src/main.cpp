@@ -3,6 +3,9 @@
 
 #include <Arduino.h>
 
+#undef min
+#undef max
+
 #include <std_node.cpp>
 #include <std_msgs/Bool.h>
 #include <std_msgs/Empty.h>
