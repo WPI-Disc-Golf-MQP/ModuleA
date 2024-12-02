@@ -14,7 +14,7 @@
 MODULE *intake_module;
 
 int BEAM_BREAK_PIN = 2;
-int INTAKE_SPEED_PIN = 12;
+int INTAKE_SPEED_PIN = 13;
 int INTAKE_INVERT_PIN = 6;
 int UPPER_SPEED_PIN = 11;
 int UPPER_INVERT_PIN = 4;
@@ -28,18 +28,20 @@ enum INTAKE_STATE
 INTAKE_STATE intake_state = INTAKE_STATE::INTAKE_IDLE;
 
 bool is_disc_present = false;
-long moved_to_INTAKE_RELEASE_time = millis();
+unsigned long moved_to_INTAKE_RELEASE_time = millis();
 bool deposited_disc = false; // flag if this instance of calling the start function has yet deposited a disc
 
 void intake_motor_move_forward(int speed = 230)
 {
   digitalWrite(INTAKE_INVERT_PIN, LOW);
   analogWrite(INTAKE_SPEED_PIN, speed); // start
+  Serial.println("intake motor started");
 }
 
 void intake_motor_stop()
 {
   analogWrite(INTAKE_SPEED_PIN, 0); // stop
+  Serial.println("intake motor stopped");
 }
 
 void top_motor_move_forward(int speed = 230)
