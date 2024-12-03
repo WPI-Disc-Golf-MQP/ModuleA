@@ -2,8 +2,12 @@
 #define STATUS_FREQ 1500 // ms
 
 #include <Arduino.h>
+
+#define Serial SerialUSB
+
 #undef min
 #undef max
+
 #include <std_node.cpp>
 #include <std_msgs/Bool.h>
 #include <std_msgs/Empty.h>
@@ -12,7 +16,7 @@
 MODULE *intake_module;
 
 int BEAM_BREAK_PIN = 2;
-int INTAKE_SPEED_PIN = 13;
+int INTAKE_SPEED_PIN = 9;
 int INTAKE_INVERT_PIN = 6;
 int UPPER_SPEED_PIN = 11;
 int UPPER_INVERT_PIN = 4;
@@ -152,6 +156,11 @@ void setup()
     // intake pins
     pinMode(BEAM_BREAK_PIN, INPUT_PULLUP);
     pinMode(INTAKE_SPEED_PIN, OUTPUT);
+
+    analogWrite(INTAKE_SPEED_PIN, 230);
+    delay(5000);
+    analogWrite(INTAKE_SPEED_PIN, 0);
+    
     pinMode(INTAKE_INVERT_PIN, OUTPUT);
 
     loginfo("setup() Complete");
