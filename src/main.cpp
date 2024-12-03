@@ -156,11 +156,6 @@ void setup()
     // intake pins
     pinMode(BEAM_BREAK_PIN, INPUT_PULLUP);
     pinMode(INTAKE_SPEED_PIN, OUTPUT);
-
-    analogWrite(INTAKE_SPEED_PIN, 230);
-    delay(5000);
-    analogWrite(INTAKE_SPEED_PIN, 0);
-    
     pinMode(INTAKE_INVERT_PIN, OUTPUT);
 
     loginfo("setup() Complete");
