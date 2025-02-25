@@ -19,7 +19,7 @@ int BEAM_BREAK_PIN = 2;
 int INTAKE_SPEED_PIN = 9;
 int INTAKE_INVERT_PIN = 6;
 int UPPER_SPEED_PIN = 11;
-int UPPER_INVERT_PIN = 4;
+int UPPER_INVERT_PIN = 7;
 int TEETH_SPEED_PIN = -1;
 int TEETH_INVERT_PIN = -1;
 
@@ -94,7 +94,11 @@ bool verify_intake_complete()
 
 void calibrate_intake()
 {
-    loginfo("calibrate_intake; not implemented"); // TODO: Implement calibration
+    // starts INTAKE_RECEIVE state so that one disc moves off the conveyor and is ready for intake
+    // should be called before starting the intake
+    loginfo("calibrating intake");
+    intake_state = INTAKE_STATE::INTAKE_SEND;
+    handle_intake_timer();
 }
 
 // ---------- ---------- INTAKE TIMER CHECK & HANDLE ---------- ----------
