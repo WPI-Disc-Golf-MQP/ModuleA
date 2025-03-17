@@ -15,13 +15,15 @@
 // ---------- ---------- INTAKE MODULE ---------- ----------
 MODULE *intake_module;
 
-int BEAM_BREAK_PIN = 2;
+int BEAM_BREAK_PIN = A3;
 int INTAKE_SPEED_PIN = 9;
 int INTAKE_INVERT_PIN = 6;
 int UPPER_SPEED_PIN = 11;
 int UPPER_INVERT_PIN = 7;
-int TEETH_SPEED_PIN = -1;
-int TEETH_INVERT_PIN = -1;
+const byte TEETH_ENCODER_A_PIN = -1;
+const byte TEETH_ENCODER_B_PIN = -1;
+byte TEETH_ENCODER_A_Last;
+boolean Direction;
 
 enum INTAKE_STATE
 {
@@ -35,7 +37,7 @@ unsigned long moved_to_INTAKE_RELEASE_time = millis();
 
 // ---------- ---------- START & STOP MOTOR FUNCTIONS ---------- ----------
 
-void start_top_motor(int speed = 230)
+void start_conveyor_motor(int speed = 230)
 {
     digitalWrite(UPPER_INVERT_PIN, LOW);
     analogWrite(UPPER_SPEED_PIN, speed); // start
@@ -46,15 +48,38 @@ void stop_top_motor()
     analogWrite(UPPER_SPEED_PIN, 0); // stop
 }
 
+
 void start_teeth_motor()
 {
-    // TODO: make teeth motor start
+    int Lstate = digitalRead(TEETH_ENCODER_A_PIN);
+    if((TEETH_ENCODER_A_Last == LOW) && Lstate==HIGH)
+    {
+      int val = digitalRead(TEETH_ENCODER_B_PIN);
+      if (val == HIGH && !Direction)
+      {
+        Direction = true;  //start: forward
+      }
+    }
 }
-
 void stop_teeth_motor()
 {
-    // TODO: make teeth motor stop
+  int Lstate = digitalRead(TEETH_ENCODER_A_PIN);
+  if((TEETH_ENCODER_A_Last == LOW) && Lstate==HIGH)
+  {
+    int val = digitalRead(TEETH_ENCODER_B_PIN);
+    if (val == LOW && Direction)
+    {
+      Direction = 0; //stop
+    }
+  }
 }
+void TeethMotorEncoderInit()
+{
+  Direction = true;//default
+  pinMode(TEETH_ENCODER_B_PIN,INPUT);
+  attachInterrupt(0, start_teeth_motor, CHANGE);
+}
+
 
 void start_intake_motor(int speed = 230)
 {
@@ -68,6 +93,7 @@ void stop_intake_motor()
     analogWrite(INTAKE_SPEED_PIN, 0); // stop
     Serial.println("intake motor stopped");
 }
+
 
 // ---------- ---------- ROS INTAKE FUNCTIONS ---------- ----------
 
@@ -92,14 +118,7 @@ bool verify_intake_complete()
     return intake_state == INTAKE_STATE::INTAKE_IDLE;
 }
 
-void calibrate_intake()
-{
-    // starts INTAKE_RECEIVE state so that one disc moves off the conveyor and is ready for intake
-    // should be called before starting the intake
-    loginfo("calibrating intake");
-    intake_state = INTAKE_STATE::INTAKE_SEND;
-    handle_intake_timer();
-}
+
 
 // ---------- ---------- INTAKE TIMER CHECK & HANDLE ---------- ----------
 
@@ -112,11 +131,20 @@ void handle_intake_timer()
 {
     if (intake_state == INTAKE_STATE::INTAKE_SEND)
     {
-        start_top_motor();
+        start_conveyor_motor();
         start_teeth_motor();
         stop_intake_motor();
         intake_state = INTAKE_STATE::INTAKE_RECIEVE;
     }
+}
+
+void calibrate_intake()
+{
+    // starts INTAKE_RECEIVE state so that one disc moves off the conveyor and is ready for intake
+    // should be called before starting the intake
+    loginfo("calibrating intake");
+    intake_state = INTAKE_STATE::INTAKE_SEND;
+    handle_intake_timer();
 }
 
 // ---------- ---------- BEAM BREAK CHECK & HANDLE ---------- ----------
@@ -143,17 +171,22 @@ void handle_beam_break()
     }
 }
 
+
+
 // ---------- ---------- SETUP ---------- ----------
 
 void setup()
 {
     init_std_node();
     loginfo("setup() Start");
+    Serial.begin(57600);
+    TeethMotorEncoderInit();
     intake_module = init_module("intake",
                                 handle_intake_start,
                                 verify_intake_complete,
                                 handle_stop_intake,
-                                calibrate_intake /* TODO: add calibration routine if needed */);
+                                calibrate_intake 
+                                /* TODO: add calibration routine if needed */);
 
     pinMode(LED_BUILTIN, OUTPUT);
 
@@ -177,3 +210,4 @@ void loop()
         handle_beam_break();
     intake_module->publish_state((int)intake_state);
 }
+
