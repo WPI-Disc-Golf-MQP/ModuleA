@@ -15,11 +15,11 @@
 // ---------- ---------- INTAKE MODULE ---------- ----------
 MODULE *intake_module;
 
-int BEAM_BREAK_PIN = 2;
+int BEAM_BREAK_PIN = A3;
 int INTAKE_SPEED_PIN = 9;
 int INTAKE_INVERT_PIN = 6;
-int UPPER_SPEED_PIN = 11;
-int UPPER_INVERT_PIN = 7;
+int UPPER_SPEED_PIN = A0;
+int UPPER_INVERT_PIN = 5;
 int TEETH_SPEED_PIN = -1;
 int TEETH_INVERT_PIN = -1;
 
@@ -37,13 +37,13 @@ unsigned long moved_to_INTAKE_RELEASE_time = millis();
 
 void start_top_motor(int speed = 230)
 {
-    digitalWrite(UPPER_INVERT_PIN, LOW);
-    analogWrite(UPPER_SPEED_PIN, speed); // start
+    // digitalWrite(UPPER_INVERT_PIN, LOW);
+    // analogWrite(UPPER_SPEED_PIN, speed); // start
 }
 
 void stop_top_motor()
 {
-    analogWrite(UPPER_SPEED_PIN, 0); // stop
+    // analogWrite(UPPER_SPEED_PIN, 0); // stop
 }
 
 void start_teeth_motor()
@@ -67,6 +67,24 @@ void stop_intake_motor()
 {
     analogWrite(INTAKE_SPEED_PIN, 0); // stop
     Serial.println("intake motor stopped");
+}
+
+// ---------- ---------- INTAKE TIMER CHECK & HANDLE ---------- ----------
+
+bool check_intake_timer()
+{
+    return moved_to_INTAKE_RELEASE_time + 2000 < millis();
+}
+
+void handle_intake_timer()
+{
+    if (intake_state == INTAKE_STATE::INTAKE_SEND)
+    {
+        start_top_motor();
+        start_teeth_motor();
+        stop_intake_motor();
+        intake_state = INTAKE_STATE::INTAKE_RECIEVE;
+    }
 }
 
 // ---------- ---------- ROS INTAKE FUNCTIONS ---------- ----------
@@ -99,24 +117,6 @@ void calibrate_intake()
     loginfo("calibrating intake");
     intake_state = INTAKE_STATE::INTAKE_SEND;
     handle_intake_timer();
-}
-
-// ---------- ---------- INTAKE TIMER CHECK & HANDLE ---------- ----------
-
-bool check_intake_timer()
-{
-    return moved_to_INTAKE_RELEASE_time + 2000 < millis();
-}
-
-void handle_intake_timer()
-{
-    if (intake_state == INTAKE_STATE::INTAKE_SEND)
-    {
-        start_top_motor();
-        start_teeth_motor();
-        stop_intake_motor();
-        intake_state = INTAKE_STATE::INTAKE_RECIEVE;
-    }
 }
 
 // ---------- ---------- BEAM BREAK CHECK & HANDLE ---------- ----------
