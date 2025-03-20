@@ -18,10 +18,14 @@ MODULE *intake_module;
 int BEAM_BREAK_PIN = A3;
 int INTAKE_SPEED_PIN = 9;
 int INTAKE_INVERT_PIN = 6;
-int UPPER_SPEED_PIN = 11;
-int UPPER_INVERT_PIN = 7;
-const byte TEETH_ENCODER_A_PIN = -1;
-const byte TEETH_ENCODER_B_PIN = -1;
+int CONVEYOR_SPEED_PIN = A0;
+int CONVEYOR_INVERT_PIN = 5;
+const byte CONVEYOR_ENCODER_A_PIN = 3;
+const byte CONVEYOR_ENCODER_B_PIN = 2;
+int TEETH_SPEED_PIN = 11;
+int TEETH_INVERT_PIN = 4;
+const byte TEETH_ENCODER_A_PIN = A2;
+const byte TEETH_ENCODER_B_PIN = 7;
 byte TEETH_ENCODER_A_Last;
 boolean Direction;
 
@@ -39,13 +43,13 @@ unsigned long moved_to_INTAKE_RELEASE_time = millis();
 
 void start_conveyor_motor(int speed = 230)
 {
-    digitalWrite(UPPER_INVERT_PIN, LOW);
-    analogWrite(UPPER_SPEED_PIN, speed); // start
+    digitalWrite(CONVEYOR_INVERT_PIN, LOW);
+    analogWrite(CONVEYOR_SPEED_PIN, speed); // start
 }
 
 void stop_top_motor()
 {
-    analogWrite(UPPER_SPEED_PIN, 0); // stop
+    analogWrite(CONVEYOR_SPEED_PIN, 0); // stop
 }
 
 
