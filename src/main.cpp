@@ -2,6 +2,7 @@
 #define STATUS_FREQ 1500 // ms
 
 #include <Arduino.h>
+#include <Encoder.h>
 
 #define Serial SerialUSB
 
@@ -12,18 +13,29 @@
 #include <std_msgs/Bool.h>
 #include <std_msgs/Empty.h>
 
+
 // ---------- ---------- INTAKE MODULE ---------- ----------
 MODULE *intake_module;
 
 int BEAM_BREAK_PIN = A3;
 int INTAKE_SPEED_PIN = 9;
 int INTAKE_INVERT_PIN = 6;
-int CONVEYOR_SPEED_PIN = 11;
-int CONVEYOR_INVERT_PIN = 7;
-const byte TEETH_ENCODER_A_PIN = -1;
-const byte TEETH_ENCODER_B_PIN = -1;
+int CONVEYOR_SPEED_PIN = A0;
+int CONVEYOR_INVERT_PIN = 5;
+const byte CONVEYOR_ENCODER_A_PIN = 3;
+const byte CONVEYOR_ENCODER_B_PIN = 2;
+
+Encoder conveyorEnc(CONVEYOR_ENCODER_A_PIN, CONVEYOR_ENCODER_B_PIN);
+long currentTeethPosition = 0;
+long previousTeethPosition = 0;
+long currentConveyorPosition = 0;
+long previousConveyorPosition = 0;
+int TEETH_SPEED_PIN = 11;
+int TEETH_INVERT_PIN = 4;
+const byte TEETH_ENCODER_A_PIN = A2;
+const byte TEETH_ENCODER_B_PIN = 7;
 byte TEETH_ENCODER_A_Last;
-boolean Direction;
+boolean conveyorDirection;
 
 enum INTAKE_STATE
 {
@@ -41,7 +53,15 @@ void start_conveyor_motor(int speed = 230)
 {
     digitalWrite(CONVEYOR_INVERT_PIN, LOW);
     analogWrite(CONVEYOR_SPEED_PIN, speed); // start
+    currentConveyorPosition = conveyorEnc.read();
+    if (previousConveyorPosition != currentConveyorPosition)
+    {
+        Serial.print("Encoder Position: ");
+        Serial.println(currentConveyorPosition);
+        previousConveyorPosition = currentConveyorPosition;
+    }
     Serial.println("Conveyor motor started");
+
 }
 
 void stop_conveyor_motor()
@@ -51,33 +71,53 @@ void stop_conveyor_motor()
 }
 
 
+// void compareConveyorTeethPosition()
+// {
+//     if (currentConveyorPosition == currentTeethPosition)
+//     {
+//         start_teeth_motor();
+//     }
+//     else
+//     {
+//         stop_teeth_motor();
+//     }
+// }
+
 void start_teeth_motor()
 {
     int Lstate = digitalRead(TEETH_ENCODER_A_PIN);
-    if((TEETH_ENCODER_A_Last == LOW) && Lstate==HIGH)
+    if ((TEETH_ENCODER_A_Last == LOW) && Lstate == HIGH)
     {
-      int val = digitalRead(TEETH_ENCODER_B_PIN);
-      if (val == HIGH && !Direction)
-      {
-        Direction = true;  //start: forward
-      }
+        int val = digitalRead(TEETH_ENCODER_B_PIN);
+        if (val == LOW && conveyorDirection)
+        {
+            conveyorDirection = false; // Reverse
+        }
+        else if (val == HIGH && !conveyorDirection)
+        {
+            conveyorDirection = true; // Forward
+        }
     }
+    TEETH_ENCODER_A_Last = Lstate;
 }
+
+
 void stop_teeth_motor()
 {
   int Lstate = digitalRead(TEETH_ENCODER_A_PIN);
   if((TEETH_ENCODER_A_Last == LOW) && Lstate==HIGH)
   {
     int val = digitalRead(TEETH_ENCODER_B_PIN);
-    if (val == LOW && Direction)
+    if (val == LOW && conveyorDirection)
     {
-      Direction = 0; //stop
+        conveyorDirection = false; // Reverse
     }
-  }
 }
+  }
+
 void TeethMotorEncoderInit()
 {
-  Direction = true;//default
+  conveyorDirection = true;//default
   pinMode(TEETH_ENCODER_B_PIN,INPUT);
   attachInterrupt(0, start_teeth_motor, CHANGE);
 }
@@ -166,7 +206,7 @@ void handle_beam_break()
 {
     if (intake_state == INTAKE_STATE::INTAKE_RECIEVE)
     {
-        stop_top_motor();
+        stop_conveyor_motor();
         stop_teeth_motor();
         intake_state = INTAKE_STATE::INTAKE_IDLE;
         intake_module->publish_status(MODULE_STATUS::COMPLETE);
@@ -196,6 +236,10 @@ void setup()
     pinMode(BEAM_BREAK_PIN, INPUT_PULLUP);
     pinMode(INTAKE_SPEED_PIN, OUTPUT);
     pinMode(INTAKE_INVERT_PIN, OUTPUT);
+    pinMode(CONVEYOR_SPEED_PIN, OUTPUT);
+    pinMode(CONVEYOR_INVERT_PIN, OUTPUT);
+    pinMode(CONVEYOR_ENCODER_A_PIN, INPUT);
+    pinMode(CONVEYOR_ENCODER_B_PIN, INPUT);
 
     loginfo("setup() Complete");
 }
