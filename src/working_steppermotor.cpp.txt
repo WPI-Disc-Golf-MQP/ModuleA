@@ -1,59 +1,109 @@
+#define NODE_NAME String("module_a")
+#define STATUS_FREQ 1500 // ms
+
 #include <Arduino.h>
 
-#define step_pin D12
-#define dir_pin D11
-#define sleep_pin D6
+#define Serial SerialUSB
 
+#undef min
+#undef max
+
+#include <std_node.cpp>
+#include <std_msgs/Bool.h>
+#include <std_msgs/Empty.h>
+
+//----------------------------------------------
+
+
+// Define pin connections & motor's steps per revolution
+// defines pins numbers
+
+const int stepPin = 8; 
+const int dirPin = 6; 
+ 
 void setup() {
-
-  Serial.begin(57600); 
-  // put your setup code here, to run once:
-  pinMode(step_pin, OUTPUT);
-  pinMode(dir_pin, OUTPUT);
-  pinMode(sleep_pin, OUTPUT);
-
-  digitalWrite(step_pin, LOW);
-  digitalWrite(dir_pin, LOW);
-  digitalWrite(sleep_pin, HIGH);
+  // Sets the two pins as Outputs
+  pinMode(stepPin,OUTPUT); 
+  pinMode(dirPin,OUTPUT);
 }
-
-void go_forward_x_rotation(double x, bool forward_back) {
-  digitalWrite(sleep_pin, HIGH);
-
-  digitalWrite(dir_pin, HIGH);
-  // digitalWrite(dir_pin, forward_back);
-
-  int i = 0;
-
-  while (true) {
-    digitalWrite(step_pin, HIGH);
-    delay(2);
-    digitalWrite(step_pin, LOW);
-    delay(2);  
-
-    if(i++ > x*200)
-    {
-      // digitalWrite(dir_pin, HIGH);
-      
-      // digitalWrite(dir_pin, !digitalRead(dir_pin));
-      // digitalWrite(sleep_pin, !digitalRead(sleep_pin));
-      digitalWrite(sleep_pin, LOW);
-      i = 0;
-      break;
-    }
-  }
-}
-
-
 void loop() {
-
-  Serial.println("hi Claire");
-
-  // digitalWrite(step_pin, HIGH);
-  // delay(2);
-  // digitalWrite(step_pin, LOW);
-  // delay(2);  
-
-  go_forward_x_rotation(1, false);
-  delay(5000);
+  digitalWrite(dirPin,HIGH); // Enables the motor to move in a particular direction
+  // Makes 200 pulses for making one full cycle rotation
+  for(int x = 0; x < 200; x++) {
+    digitalWrite(stepPin,HIGH); 
+    delayMicroseconds(500); 
+    digitalWrite(stepPin,LOW); 
+    delayMicroseconds(500); 
+  }
+  delay(1000); // One second delay
+  
+  digitalWrite(dirPin,LOW); //Changes the rotations direction
+  // Makes 400 pulses for making two full cycle rotation
+  for(int x = 0; x < 400; x++) {
+    digitalWrite(stepPin,HIGH);
+    delayMicroseconds(500);
+    digitalWrite(stepPin,LOW);
+    delayMicroseconds(500);
+  }
+  delay(1000);
 }
+
+// #include <Arduino.h>
+
+// #define step_pin D12
+// #define dir_pin D11
+// #define sleep_pin D6
+
+// void setup() {
+
+//   Serial.begin(57600); 
+//   // put your setup code here, to run once:
+//   pinMode(step_pin, OUTPUT);
+//   pinMode(dir_pin, OUTPUT);
+//   pinMode(sleep_pin, OUTPUT);
+
+//   digitalWrite(step_pin, LOW);
+//   digitalWrite(dir_pin, LOW);
+//   digitalWrite(sleep_pin, HIGH);
+// }
+
+// void go_forward_x_rotation(double x, bool forward_back) {
+//   digitalWrite(sleep_pin, HIGH);
+
+//   digitalWrite(dir_pin, HIGH);
+//   // digitalWrite(dir_pin, forward_back);
+
+//   int i = 0;
+
+//   while (true) {
+//     digitalWrite(step_pin, HIGH);
+//     delay(2);
+//     digitalWrite(step_pin, LOW);
+//     delay(2);  
+
+//     if(i++ > x*200)
+//     {
+//       // digitalWrite(dir_pin, HIGH);
+      
+//       // digitalWrite(dir_pin, !digitalRead(dir_pin));
+//       // digitalWrite(sleep_pin, !digitalRead(sleep_pin));
+//       digitalWrite(sleep_pin, LOW);
+//       i = 0;
+//       break;
+//     }
+//   }
+// }
+
+
+// void loop() {
+
+//   Serial.println("hi Claire");
+
+//   // digitalWrite(step_pin, HIGH);
+//   // delay(2);
+//   // digitalWrite(step_pin, LOW);
+//   // delay(2);  
+
+//   go_forward_x_rotation(1, false);
+//   delay(5000);
+// }
