@@ -2,7 +2,6 @@
 #define STATUS_FREQ 1500 // ms
 
 #include <Arduino.h>
-#include <Encoder.h>
 
 #define Serial SerialUSB
 
@@ -24,8 +23,34 @@ int CONVEYOR_SPEED_PIN = A0;
 int CONVEYOR_INVERT_PIN = 5;
 const byte CONVEYOR_ENCODER_A_PIN = 3;
 const byte CONVEYOR_ENCODER_B_PIN = 2;
+volatile long encoderCount = 0;
 
-Encoder conveyorEnc(CONVEYOR_ENCODER_A_PIN, CONVEYOR_ENCODER_B_PIN);
+void CONVEYOR_ENCODER_ISR_A()
+{
+    if (digitalRead(CONVEYOR_ENCODER_A_PIN) == digitalRead(CONVEYOR_ENCODER_B_PIN))
+        encoderCount++;
+    else
+        encoderCount--;
+}
+
+void CONVEYOR_ENCODER_ISR_B()
+{
+    if (digitalRead(CONVEYOR_ENCODER_A_PIN) == digitalRead(CONVEYOR_ENCODER_B_PIN))
+        encoderCount--;
+    else
+        encoderCount++;
+}
+
+long getConveyorPosition() 
+{
+    long tempCount = 0;
+    noInterrupts();
+    tempCount = encoderCount;
+    interrupts();
+    return tempCount;
+}
+
+// Encoder conveyorEnc(CONVEYOR_ENCODER_A_PIN, CONVEYOR_ENCODER_B_PIN);
 long currentTeethPosition = 0;
 long previousTeethPosition = 0;
 long currentConveyorPosition = 0;
@@ -53,7 +78,7 @@ void start_conveyor_motor(int speed = 230)
 {
     digitalWrite(CONVEYOR_INVERT_PIN, LOW);
     analogWrite(CONVEYOR_SPEED_PIN, speed); // start
-    currentConveyorPosition = conveyorEnc.read();
+    currentConveyorPosition = getConveyorPosition();
     if (previousConveyorPosition != currentConveyorPosition)
     {
         Serial.print("Encoder Position: ");
@@ -240,6 +265,11 @@ void setup()
     pinMode(CONVEYOR_INVERT_PIN, OUTPUT);
     pinMode(CONVEYOR_ENCODER_A_PIN, INPUT);
     pinMode(CONVEYOR_ENCODER_B_PIN, INPUT);
+
+    pinMode(CONVEYOR_ENCODER_A_PIN, INPUT);
+    pinMode(CONVEYOR_ENCODER_B_PIN, INPUT);
+    attachInterrupt(digitalPinToInterrupt(CONVEYOR_ENCODER_A_PIN), CONVEYOR_ENCODER_ISR_A, CHANGE);
+    attachInterrupt(digitalPinToInterrupt(CONVEYOR_ENCODER_B_PIN), CONVEYOR_ENCODER_ISR_B, CHANGE);
 
     loginfo("setup() Complete");
 }
