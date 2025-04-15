@@ -49,7 +49,7 @@ unsigned long moved_to_INTAKE_RELEASE_time = millis();
 
 // ---------- ---------- START & STOP MOTOR FUNCTIONS ---------- ----------
 
-void start_conveyor_motor(int speed = 230)
+void start_conveyor_motor(int speed = 300)
 {
     digitalWrite(CONVEYOR_INVERT_PIN, LOW);
     analogWrite(CONVEYOR_SPEED_PIN, speed); // start
@@ -89,11 +89,11 @@ void start_teeth_motor()
     if ((TEETH_ENCODER_A_Last == LOW) && Lstate == HIGH)
     {
         int val = digitalRead(TEETH_ENCODER_B_PIN);
-        if (val == LOW && conveyorDirection)
+        if (val == HIGH && conveyorDirection)
         {
             conveyorDirection = false; // Reverse
         }
-        else if (val == HIGH && !conveyorDirection)
+        else if (val == LOW && !conveyorDirection)
         {
             conveyorDirection = true; // Forward
         }
@@ -221,7 +221,6 @@ void setup()
 {
     init_std_node();
     loginfo("setup() Start");
-    Serial.begin(57600);
     TeethMotorEncoderInit();
     intake_module = init_module("intake",
                                 handle_intake_start,
@@ -242,6 +241,8 @@ void setup()
     pinMode(CONVEYOR_ENCODER_B_PIN, INPUT);
 
     loginfo("setup() Complete");
+
+    digitalWrite(CONVEYOR_SPEED_PIN, LOW);
 }
 
 // ---------- ---------- LOOP ---------- ----------
