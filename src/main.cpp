@@ -23,7 +23,7 @@ int CONVEYOR_SPEED_PIN = A0;
 int CONVEYOR_INVERT_PIN = 5;
 const byte CONVEYOR_ENCODER_A_PIN = 3;
 const byte CONVEYOR_ENCODER_B_PIN = 2;
-volatile long encoderCount = 0;
+volatile unsigned long encoderCount = 0;
 
 void CONVEYOR_ENCODER_ISR_A()
 {
@@ -41,19 +41,22 @@ void CONVEYOR_ENCODER_ISR_B()
         encoderCount++;
 }
 
-long getConveyorPosition() 
+float getConveyorPosition() 
 {
     long tempCount = 0;
     noInterrupts();
     tempCount = encoderCount;
     interrupts();
-    return tempCount;
+    // for 12 magnets with quadruture encoding, it's 48 ticks per motor shaft rotation
+    // and the motor gear ratio is 721:1
+    // TODO: convert to how much the conveyor itself has moved
+    return tempCount / (48 * 721 * 1.0);
 }
 
 // Encoder conveyorEnc(CONVEYOR_ENCODER_A_PIN, CONVEYOR_ENCODER_B_PIN);
 long currentTeethPosition = 0;
 long previousTeethPosition = 0;
-long currentConveyorPosition = 0;
+float currentConveyorPosition = 0; // this is a float representing how many motor rotations
 long previousConveyorPosition = 0;
 int TEETH_SPEED_PIN = 11;
 int TEETH_INVERT_PIN = 4;
