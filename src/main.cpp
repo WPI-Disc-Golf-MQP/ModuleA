@@ -2,7 +2,6 @@
 #define STATUS_FREQ 1500 // ms
 
 #include <Arduino.h>
-#include <Encoder.h>
 
 #define Serial SerialUSB
 
@@ -18,24 +17,82 @@
 MODULE *intake_module;
 
 int BEAM_BREAK_PIN = A3;
-int INTAKE_SPEED_PIN = 9;
-int INTAKE_INVERT_PIN = 6;
-int CONVEYOR_SPEED_PIN = A0;
-int CONVEYOR_INVERT_PIN = 5;
+
+int CONVEYOR_SPEED_PIN = 9;
+int CONVEYOR_INVERT_PIN = 6;
 const byte CONVEYOR_ENCODER_A_PIN = 3;
 const byte CONVEYOR_ENCODER_B_PIN = 2;
-
-Encoder conveyorEnc(CONVEYOR_ENCODER_A_PIN, CONVEYOR_ENCODER_B_PIN);
-long currentTeethPosition = 0;
-long previousTeethPosition = 0;
+volatile long conveyorEncoderCount = 0;
 long currentConveyorPosition = 0;
 long previousConveyorPosition = 0;
+boolean conveyorDirection;
+// for 12 magnets with quadruture encoding, it's 48 ticks per motor shaft rotation
+// and the motor gear ratio is 721:1
+// TODO: convert to how much the conveyor itself has moved
+// (48 * 721 * 1.0)
+
+void CONVEYOR_ENCODER_ISR_A()
+{
+    if (digitalRead(CONVEYOR_ENCODER_A_PIN) == digitalRead(CONVEYOR_ENCODER_B_PIN))
+        conveyorEncoderCount++;
+    else
+        conveyorEncoderCount--;
+}
+
+void CONVEYOR_ENCODER_ISR_B()
+{
+    if (digitalRead(CONVEYOR_ENCODER_A_PIN) == digitalRead(CONVEYOR_ENCODER_B_PIN))
+        conveyorEncoderCount--;
+    else
+        conveyorEncoderCount++;
+}
+
+long getConveyorPosition() 
+{
+    long tempCount = 0;
+    noInterrupts();
+    tempCount = conveyorEncoderCount;
+    interrupts();
+    return tempCount;
+}
+
+// Encoder conveyorEnc(CONVEYOR_ENCODER_A_PIN, CONVEYOR_ENCODER_B_PIN);
 int TEETH_SPEED_PIN = 11;
 int TEETH_INVERT_PIN = 4;
 const byte TEETH_ENCODER_A_PIN = A2;
 const byte TEETH_ENCODER_B_PIN = 7;
+volatile long teethEncoderCount = 0;
+long currentTeethPosition = 0;
+long previousTeethPosition = 0;
 byte TEETH_ENCODER_A_Last;
-boolean conveyorDirection;
+
+void TEETH_ENCODER_ISR_A()
+{
+    if (digitalRead(TEETH_ENCODER_A_PIN) == digitalRead(TEETH_ENCODER_B_PIN))
+        teethEncoderCount++;
+    else
+        teethEncoderCount--;
+}
+
+void TEETH_ENCODER_ISR_B()
+{
+    if (digitalRead(TEETH_ENCODER_A_PIN) == digitalRead(TEETH_ENCODER_B_PIN))
+        teethEncoderCount--;
+    else
+        teethEncoderCount++;
+}
+
+long getTeethPosition()
+{
+    long tempCount = 0;
+    noInterrupts();
+    tempCount = teethEncoderCount;
+    interrupts();
+    return tempCount;
+}
+
+int INTAKE_SPEED_PIN = 9;
+int INTAKE_INVERT_PIN = 6;
 
 enum INTAKE_STATE
 {
@@ -53,7 +110,7 @@ void start_conveyor_motor(int speed = 300)
 {
     digitalWrite(CONVEYOR_INVERT_PIN, LOW);
     analogWrite(CONVEYOR_SPEED_PIN, speed); // start
-    currentConveyorPosition = conveyorEnc.read();
+    currentConveyorPosition = getConveyorPosition();
     if (previousConveyorPosition != currentConveyorPosition)
     {
         Serial.print("Encoder Position: ");
@@ -233,12 +290,23 @@ void setup()
 
     // intake pins
     pinMode(BEAM_BREAK_PIN, INPUT_PULLUP);
-    pinMode(INTAKE_SPEED_PIN, OUTPUT);
-    pinMode(INTAKE_INVERT_PIN, OUTPUT);
+
     pinMode(CONVEYOR_SPEED_PIN, OUTPUT);
     pinMode(CONVEYOR_INVERT_PIN, OUTPUT);
     pinMode(CONVEYOR_ENCODER_A_PIN, INPUT);
     pinMode(CONVEYOR_ENCODER_B_PIN, INPUT);
+    attachInterrupt(digitalPinToInterrupt(CONVEYOR_ENCODER_A_PIN), CONVEYOR_ENCODER_ISR_A, CHANGE);
+    attachInterrupt(digitalPinToInterrupt(CONVEYOR_ENCODER_B_PIN), CONVEYOR_ENCODER_ISR_B, CHANGE);
+
+    pinMode(TEETH_SPEED_PIN, OUTPUT);
+    pinMode(TEETH_INVERT_PIN, OUTPUT);
+    pinMode(TEETH_ENCODER_A_PIN, INPUT);
+    pinMode(TEETH_ENCODER_B_PIN, INPUT);
+    attachInterrupt(digitalPinToInterrupt(TEETH_ENCODER_A_PIN), TEETH_ENCODER_ISR_A, CHANGE);
+    attachInterrupt(digitalPinToInterrupt(TEETH_ENCODER_B_PIN), TEETH_ENCODER_ISR_B, CHANGE);
+
+    pinMode(INTAKE_SPEED_PIN, OUTPUT);
+    pinMode(INTAKE_INVERT_PIN, OUTPUT);
 
     loginfo("setup() Complete");
 
