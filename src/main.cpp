@@ -23,9 +23,7 @@ int CONVEYOR_INVERT_PIN = 6;
 const byte CONVEYOR_ENCODER_A_PIN = 3;
 const byte CONVEYOR_ENCODER_B_PIN = 2;
 volatile long conveyorEncoderCount = 0;
-long currentConveyorPosition = 0;
-long previousConveyorPosition = 0;
-boolean conveyorDirection;
+
 // for 12 magnets with quadruture encoding, it's 48 ticks per motor shaft rotation
 // and the motor gear ratio is 721:1
 // TODO: convert to how much the conveyor itself has moved
@@ -47,13 +45,21 @@ void CONVEYOR_ENCODER_ISR_B()
         conveyorEncoderCount++;
 }
 
-long getConveyorPosition() 
+long getConveyorEncoderCount() 
 {
     long tempCount = 0;
     noInterrupts();
     tempCount = conveyorEncoderCount;
     interrupts();
     return tempCount;
+}
+
+float getConveyorPosition()
+{
+    // for 12 magnets with quadruture encoding, it's 48 ticks per motor shaft rotation
+    // and the motor gear ratio is 721:1
+    // there is a 1 inch radius on the motor shaft
+    return 2 * 3.14159 * getConveyorEncoderCount() / (48 * 721 * 1.0);
 }
 
 // Encoder conveyorEnc(CONVEYOR_ENCODER_A_PIN, CONVEYOR_ENCODER_B_PIN);
@@ -110,13 +116,13 @@ void start_conveyor_motor(int speed = 230)
 {
     digitalWrite(CONVEYOR_INVERT_PIN, LOW);
     analogWrite(CONVEYOR_SPEED_PIN, speed); // start
-    currentConveyorPosition = getConveyorPosition();
-    if (previousConveyorPosition != currentConveyorPosition)
-    {
-        Serial.print("Encoder Position: ");
-        Serial.println(currentConveyorPosition);
-        previousConveyorPosition = currentConveyorPosition;
-    }
+    //currentConveyorPosition = getConveyorPosition();
+    //if (previousConveyorPosition != currentConveyorPosition)
+    //{
+    //    Serial.print("Encoder Position: ");
+    //    Serial.println(currentConveyorPosition);
+    //    previousConveyorPosition = currentConveyorPosition;
+    //}
     Serial.println("Conveyor motor started");
 
 }
@@ -142,43 +148,35 @@ void stop_conveyor_motor()
 
 void start_teeth_motor()
 {
-    int Lstate = digitalRead(TEETH_ENCODER_A_PIN);
-    if ((TEETH_ENCODER_A_Last == LOW) && Lstate == HIGH)
-    {
-        int val = digitalRead(TEETH_ENCODER_B_PIN);
-        if (val == LOW && conveyorDirection)
-        {
-            conveyorDirection = false; // Reverse
-        }
-        else if (val == HIGH && !conveyorDirection)
-        {
-            conveyorDirection = true; // Forward
-        }
-    }
-    TEETH_ENCODER_A_Last = Lstate;
+    //int Lstate = digitalRead(TEETH_ENCODER_A_PIN);
+    //if ((TEETH_ENCODER_A_Last == LOW) && Lstate == HIGH)
+    //{
+    //    int val = digitalRead(TEETH_ENCODER_B_PIN);
+    //    if (val == LOW && conveyorDirection)
+    //    {
+    //        conveyorDirection = false; // Reverse
+    //    }
+    //    else if (val == HIGH && !conveyorDirection)
+    //    {
+    //        conveyorDirection = true; // Forward
+    //    }
+    //}
+    //TEETH_ENCODER_A_Last = Lstate;
 }
 
 
 void stop_teeth_motor()
 {
-  int Lstate = digitalRead(TEETH_ENCODER_A_PIN);
-  if((TEETH_ENCODER_A_Last == LOW) && Lstate==HIGH)
-  {
-    int val = digitalRead(TEETH_ENCODER_B_PIN);
-    if (val == LOW && conveyorDirection)
-    {
-        conveyorDirection = false; // Reverse
-    }
+  //int Lstate = digitalRead(TEETH_ENCODER_A_PIN);
+  //if((TEETH_ENCODER_A_Last == LOW) && Lstate==HIGH)
+  //{
+  //  int val = digitalRead(TEETH_ENCODER_B_PIN);
+  //  if (val == LOW && conveyorDirection)
+  //  {
+  //      conveyorDirection = false; // Reverse
+  //  }
+  //}
 }
-  }
-
-void TeethMotorEncoderInit()
-{
-  conveyorDirection = true;//default
-  pinMode(TEETH_ENCODER_B_PIN,INPUT);
-  attachInterrupt(0, start_teeth_motor, CHANGE);
-}
-
 
 void start_intake_motor(int speed = 230)
 {
@@ -279,7 +277,6 @@ void setup()
     init_std_node();
     loginfo("setup() Start");
     Serial.begin(57600);
-    TeethMotorEncoderInit();
     intake_module = init_module("intake",
                                 handle_intake_start,
                                 verify_intake_complete,
