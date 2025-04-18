@@ -48,12 +48,21 @@ void CONVEYOR_ENCODER_ISR_B()
 }
 
 long getConveyorEncoderCount() 
+long getConveyorEncoderCount() 
 {
     long tempCount = 0;
     noInterrupts();
     tempCount = conveyorEncoderCount;
     interrupts();
     return tempCount;
+}
+
+float getConveyorPosition()
+{
+    // for 12 magnets with quadruture encoding, it's 48 ticks per motor shaft rotation
+    // and the motor gear ratio is 721:1
+    // there is a 1 inch radius on the motor shaft
+    return 2 * 3.14159 * getConveyorEncoderCount() / (48 * 721 * 1.0);
 }
 
 float getConveyorPosition()
