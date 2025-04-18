@@ -23,9 +23,9 @@ int CONVEYOR_INVERT_PIN = 6;
 const byte CONVEYOR_ENCODER_A_PIN = 3;
 const byte CONVEYOR_ENCODER_B_PIN = 2;
 volatile long conveyorEncoderCount = 0;
-long currentConveyorPosition = 0;
-long previousConveyorPosition = 0;
-boolean conveyorDirection;
+const long TEETH_CONVEYOR_TOLERANCE_TICKS = 10;  // adjust as needed
+
+
 // for 12 magnets with quadruture encoding, it's 48 ticks per motor shaft rotation
 // and the motor gear ratio is 721:1
 // TODO: convert to how much the conveyor itself has moved
@@ -47,13 +47,21 @@ void CONVEYOR_ENCODER_ISR_B()
         conveyorEncoderCount++;
 }
 
-long getConveyorPosition() 
+long getConveyorEncoderCount() 
 {
     long tempCount = 0;
     noInterrupts();
     tempCount = conveyorEncoderCount;
     interrupts();
     return tempCount;
+}
+
+float getConveyorPosition()
+{
+    // for 12 magnets with quadruture encoding, it's 48 ticks per motor shaft rotation
+    // and the motor gear ratio is 721:1
+    // there is a 1 inch radius on the motor shaft
+    return 2 * 3.14159 * getConveyorEncoderCount() / (48 * 721 * 1.0);
 }
 
 // Encoder conveyorEnc(CONVEYOR_ENCODER_A_PIN, CONVEYOR_ENCODER_B_PIN);
@@ -106,17 +114,10 @@ unsigned long moved_to_INTAKE_RELEASE_time = millis();
 
 // ---------- ---------- START & STOP MOTOR FUNCTIONS ---------- ----------
 
-void start_conveyor_motor(int speed = 300)
+void start_conveyor_motor(int speed = 230)
 {
     digitalWrite(CONVEYOR_INVERT_PIN, LOW);
     analogWrite(CONVEYOR_SPEED_PIN, speed); // start
-    currentConveyorPosition = getConveyorPosition();
-    if (previousConveyorPosition != currentConveyorPosition)
-    {
-        Serial.print("Encoder Position: ");
-        Serial.println(currentConveyorPosition);
-        previousConveyorPosition = currentConveyorPosition;
-    }
     Serial.println("Conveyor motor started");
 
 }
@@ -127,58 +128,36 @@ void stop_conveyor_motor()
     Serial.println("Conveyor motor stopped");
 }
 
-
-// void compareConveyorTeethPosition()
-// {
-//     if (currentConveyorPosition == currentTeethPosition)
-//     {
-//         start_teeth_motor();
-//     }
-//     else
-//     {
-//         stop_teeth_motor();
-//     }
-// }
-
-void start_teeth_motor()
-{
-    int Lstate = digitalRead(TEETH_ENCODER_A_PIN);
-    if ((TEETH_ENCODER_A_Last == LOW) && Lstate == HIGH)
-    {
-        int val = digitalRead(TEETH_ENCODER_B_PIN);
-        if (val == HIGH && conveyorDirection)
-        {
-            conveyorDirection = false; // Reverse
-        }
-        else if (val == LOW && !conveyorDirection)
-        {
-            conveyorDirection = true; // Forward
-        }
-    }
-    TEETH_ENCODER_A_Last = Lstate;
+void start_teeth_motor(int speed = 230) {
+    digitalWrite(TEETH_INVERT_PIN, LOW);
+    analogWrite(TEETH_SPEED_PIN, speed);
+    Serial.println("Teeth motor started");
 }
 
+void stop_teeth_motor() {
+    analogWrite(TEETH_SPEED_PIN, 0);
+    Serial.println("Teeth motor stopped");
+}
 
-void stop_teeth_motor()
+void handle_teeth_conveyor_coordination()
 {
-  int Lstate = digitalRead(TEETH_ENCODER_A_PIN);
-  if((TEETH_ENCODER_A_Last == LOW) && Lstate==HIGH)
-  {
-    int val = digitalRead(TEETH_ENCODER_B_PIN);
-    if (val == LOW && conveyorDirection)
+    if (intake_state != INTAKE_STATE::INTAKE_RECIEVE)
+        return;
+
+    long conveyor_ticks = getConveyorEncoderCount();
+    long teeth_ticks = getTeethPosition();
+
+    long tick_diff = abs(teeth_ticks - conveyor_ticks);
+
+    if (tick_diff <= TEETH_CONVEYOR_TOLERANCE_TICKS)
     {
-        conveyorDirection = false; // Reverse
+        start_teeth_motor();
+    }
+    else
+    {
+        stop_teeth_motor();
     }
 }
-  }
-
-void TeethMotorEncoderInit()
-{
-  conveyorDirection = true;//default
-  pinMode(TEETH_ENCODER_B_PIN,INPUT);
-  attachInterrupt(0, start_teeth_motor, CHANGE);
-}
-
 
 void start_intake_motor(int speed = 230)
 {
@@ -278,7 +257,7 @@ void setup()
 {
     init_std_node();
     loginfo("setup() Start");
-    TeethMotorEncoderInit();
+    Serial.begin(57600);
     intake_module = init_module("intake",
                                 handle_intake_start,
                                 verify_intake_complete,
@@ -309,8 +288,6 @@ void setup()
     pinMode(INTAKE_INVERT_PIN, OUTPUT);
 
     loginfo("setup() Complete");
-
-    digitalWrite(CONVEYOR_SPEED_PIN, LOW);
 }
 
 // ---------- ---------- LOOP ---------- ----------
@@ -323,6 +300,8 @@ void loop()
         handle_intake_timer();
     if (check_beam_break())
         handle_beam_break();
+    
+    handle_teeth_conveyor_coordination();
     intake_module->publish_state((int)intake_state);
 }
 
