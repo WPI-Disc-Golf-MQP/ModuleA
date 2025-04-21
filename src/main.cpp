@@ -18,8 +18,8 @@ MODULE *intake_module;
 
 int BEAM_BREAK_PIN = A3;
 
-int CONVEYOR_SPEED_PIN = 9;
-int CONVEYOR_INVERT_PIN = 6;
+int CONVEYOR_SPEED_PIN = A0;
+int CONVEYOR_INVERT_PIN = 5;
 const byte CONVEYOR_ENCODER_A_PIN = 3;
 const byte CONVEYOR_ENCODER_B_PIN = 2;
 volatile long conveyorEncoderCount = 0;
@@ -125,7 +125,7 @@ unsigned long moved_to_INTAKE_RELEASE_time = millis();
 
 // ---------- ---------- START & STOP MOTOR FUNCTIONS ---------- ----------
 
-void start_conveyor_motor(int speed = 230)
+void start_conveyor_motor(int speed = 100)
 {
     digitalWrite(CONVEYOR_INVERT_PIN, HIGH);
     analogWrite(CONVEYOR_SPEED_PIN, speed); // start
@@ -139,8 +139,8 @@ void stop_conveyor_motor()
     Serial.println("Conveyor motor stopped");
 }
 
-void start_teeth_motor(int speed = 100) {
-    digitalWrite(TEETH_INVERT_PIN, LOW);
+void start_teeth_motor(int speed = 80) {
+    digitalWrite(TEETH_INVERT_PIN, HIGH);
     analogWrite(TEETH_SPEED_PIN, speed);
     Serial.println("Teeth motor started");
 }
