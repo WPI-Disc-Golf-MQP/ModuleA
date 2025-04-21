@@ -48,7 +48,6 @@ void CONVEYOR_ENCODER_ISR_B()
 }
 
 long getConveyorEncoderCount() 
-long getConveyorEncoderCount() 
 {
     long tempCount = 0;
     noInterrupts();
@@ -65,13 +64,7 @@ float getConveyorPosition()
     return 2 * 3.14159 * getConveyorEncoderCount() / (48 * 721 * 1.0);
 }
 
-float getConveyorPosition()
-{
-    // for 12 magnets with quadruture encoding, it's 48 ticks per motor shaft rotation
-    // and the motor gear ratio is 721:1
-    // there is a 1 inch radius on the motor shaft
-    return 2 * 3.14159 * getConveyorEncoderCount() / (48 * 721 * 1.0);
-}
+
 
 // Encoder conveyorEnc(CONVEYOR_ENCODER_A_PIN, CONVEYOR_ENCODER_B_PIN);
 int TEETH_SPEED_PIN = 11;
@@ -125,7 +118,7 @@ unsigned long moved_to_INTAKE_RELEASE_time = millis();
 
 void start_conveyor_motor(int speed = 230)
 {
-    digitalWrite(CONVEYOR_INVERT_PIN, LOW);
+    digitalWrite(CONVEYOR_INVERT_PIN, HIGH);
     analogWrite(CONVEYOR_SPEED_PIN, speed); // start
     Serial.println("Conveyor motor started");
 
@@ -137,7 +130,7 @@ void stop_conveyor_motor()
     Serial.println("Conveyor motor stopped");
 }
 
-void start_teeth_motor(int speed = 230) {
+void start_teeth_motor(int speed = 100) {
     digitalWrite(TEETH_INVERT_PIN, LOW);
     analogWrite(TEETH_SPEED_PIN, speed);
     Serial.println("Teeth motor started");
@@ -187,7 +180,8 @@ void stop_intake_motor()
 void handle_intake_start()
 {
     loginfo("start_intake");
-    start_intake_motor();
+    start_conveyor_motor();
+    start_teeth_motor();
     moved_to_INTAKE_RELEASE_time = millis();
     intake_state = INTAKE_STATE::INTAKE_SEND;
 }
@@ -218,8 +212,6 @@ void handle_intake_timer()
 {
     if (intake_state == INTAKE_STATE::INTAKE_SEND)
     {
-        start_conveyor_motor();
-        start_teeth_motor();
         stop_intake_motor();
         intake_state = INTAKE_STATE::INTAKE_RECIEVE;
     }
@@ -305,12 +297,12 @@ void loop()
 {
     periodic_status();
     nh.spinOnce();
+    handle_teeth_conveyor_coordination();
     if (check_intake_timer())
         handle_intake_timer();
     if (check_beam_break())
         handle_beam_break();
     
-    handle_teeth_conveyor_coordination();
     intake_module->publish_state((int)intake_state);
 }
 
