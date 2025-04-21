@@ -60,7 +60,7 @@ float getConveyorPosition()
 {
     // for 12 magnets with quadruture encoding, it's 48 ticks per motor shaft rotation
     // and the motor gear ratio is 721:1
-    // there is a 1 inch radius on the motor shaft
+    // there is a 2 inch diameter on the motor shaft
     return 2 * 3.14159 * getConveyorEncoderCount() / (48 * 721 * 1.0);
 }
 
@@ -92,13 +92,22 @@ void TEETH_ENCODER_ISR_B()
         teethEncoderCount++;
 }
 
-long getTeethPosition()
+long getTeethEncoderCount()
 {
     long tempCount = 0;
     noInterrupts();
     tempCount = teethEncoderCount;
     interrupts();
     return tempCount;
+}
+
+float getTeethPosition()
+{
+    // 12 ticks per motor shaft rotation
+    // and the motor gear ratio is 43.8:1
+    // and the external gear ratio is 5:1
+    // there is a 4 inch diameter on the motor shaft
+    return 4 * 3.14159 * getTeethEncoderCount() / (12 * 43.8 * 5);
 }
 
 int INTAKE_SPEED_PIN = 9;
@@ -146,18 +155,20 @@ void handle_teeth_conveyor_coordination()
     if (intake_state != INTAKE_STATE::INTAKE_RECIEVE)
         return;
 
-    long conveyor_ticks = getConveyorEncoderCount();
-    long teeth_ticks = getTeethPosition();
+    float conveyorPosition = getConveyorPosition();
+    float teethPosition = getTeethPosition();
 
-    long tick_diff = abs(teeth_ticks - conveyor_ticks);
-
-    if (tick_diff <= TEETH_CONVEYOR_TOLERANCE_TICKS)
+    if (teethPosition > conveyorPosition) 
     {
-        start_teeth_motor();
-    }
-    else
-    {
+        Serial.println("teeth motor > conveyor motor");
+        start_conveyor_motor();
         stop_teeth_motor();
+    }
+    else 
+    {
+        Serial.println("teeth motor < conveyor motor");
+        stop_conveyor_motor();
+        start_teeth_motor();
     }
 }
 
