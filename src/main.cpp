@@ -125,7 +125,7 @@ unsigned long moved_to_INTAKE_RELEASE_time = millis();
 
 // ---------- ---------- START & STOP MOTOR FUNCTIONS ---------- ----------
 
-void start_conveyor_motor(int speed = 100)
+void start_conveyor_motor(int speed = 230)
 {
     digitalWrite(CONVEYOR_INVERT_PIN, HIGH);
     analogWrite(CONVEYOR_SPEED_PIN, speed); // start
@@ -193,6 +193,7 @@ void handle_intake_start()
     loginfo("start_intake");
     start_conveyor_motor();
     start_teeth_motor();
+    start_intake_motor();
     moved_to_INTAKE_RELEASE_time = millis();
     intake_state = INTAKE_STATE::INTAKE_SEND;
 }
