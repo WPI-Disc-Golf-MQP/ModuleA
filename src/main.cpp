@@ -23,13 +23,6 @@ int CONVEYOR_INVERT_PIN = 5;
 const byte CONVEYOR_ENCODER_A_PIN = 3;
 const byte CONVEYOR_ENCODER_B_PIN = 2;
 volatile long conveyorEncoderCount = 0;
-const long TEETH_CONVEYOR_TOLERANCE_TICKS = 10;  // adjust as needed
-
-
-// for 12 magnets with quadruture encoding, it's 48 ticks per motor shaft rotation
-// and the motor gear ratio is 721:1
-// TODO: convert to how much the conveyor itself has moved
-// (48 * 721 * 1.0)
 
 void CONVEYOR_ENCODER_ISR_A()
 {
@@ -47,7 +40,14 @@ void CONVEYOR_ENCODER_ISR_B()
         conveyorEncoderCount++;
 }
 
-long getConveyorEncoderCount() 
+void reset_conveyor_encoder_count()
+{
+    noInterrupts();
+    conveyorEncoderCount = 0;
+    interrupts();
+}
+
+long get_conveyor_encoder_count() 
 {
     long tempCount = 0;
     noInterrupts();
@@ -56,17 +56,14 @@ long getConveyorEncoderCount()
     return tempCount;
 }
 
-float getConveyorPosition()
+float get_conveyor_position()
 {
-    // for 12 magnets with quadruture encoding, it's 48 ticks per motor shaft rotation
-    // and the motor gear ratio is 721:1
+    // 24 ticks per motor shaft rotation
+    // and the motor gear ratio is 189:1
     // there is a 2 inch diameter on the motor shaft
-    return 2 * 3.14159 * getConveyorEncoderCount() / (48 * 721 * 1.0);
+    return 2 * 3.14159 * get_conveyor_encoder_count() / (24 * 189 * 1.0);
 }
 
-
-
-// Encoder conveyorEnc(CONVEYOR_ENCODER_A_PIN, CONVEYOR_ENCODER_B_PIN);
 int TEETH_SPEED_PIN = 11;
 int TEETH_INVERT_PIN = 4;
 const byte TEETH_ENCODER_A_PIN = A2;
@@ -92,7 +89,14 @@ void TEETH_ENCODER_ISR_B()
         teethEncoderCount++;
 }
 
-long getTeethEncoderCount()
+void reset_teeth_encoder_count()
+{
+    noInterrupts();
+    teethEncoderCount = 0;
+    interrupts();
+}
+
+long get_teeth_encoder_count()
 {
     long tempCount = 0;
     noInterrupts();
@@ -101,13 +105,13 @@ long getTeethEncoderCount()
     return tempCount;
 }
 
-float getTeethPosition()
+float get_teeth_position()
 {
     // 64 ticks per motor shaft rotation
     // and the motor gear ratio is 43.7:1
     // and the external gear ratio is 5:1
     // there is a 4 inch diameter on the motor shaft
-    return 4 * 3.14159 * getTeethEncoderCount() / (64 * 43.7 * 5);
+    return 4 * 3.14159 * get_teeth_encoder_count() / (64 * 43.7 * 5);
 }
 
 int INTAKE_SPEED_PIN = 9;
@@ -156,8 +160,8 @@ void handle_teeth_conveyor_coordination()
 {
     if (intake_state == INTAKE_STATE::INTAKE_RECEIVE) 
     {
-        float conveyorPosition = getConveyorPosition();
-        float teethPosition = getTeethPosition();
+        float conveyorPosition = get_conveyor_position();
+        float teethPosition = get_teeth_position();
 
         if (teethPosition > conveyorPosition) 
         {
@@ -225,6 +229,8 @@ void handle_intake_timer()
     if (intake_state == INTAKE_STATE::INTAKE_SEND)
     {
         stop_intake_motor();
+        reset_conveyor_encoder_count();
+        reset_teeth_encoder_count();
         start_conveyor_motor();
         start_teeth_motor();
         intake_state = INTAKE_STATE::INTAKE_RECEIVE;
