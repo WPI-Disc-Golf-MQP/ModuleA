@@ -103,11 +103,11 @@ long getTeethEncoderCount()
 
 float getTeethPosition()
 {
-    // 12 ticks per motor shaft rotation
-    // and the motor gear ratio is 43.8:1
+    // 64 ticks per motor shaft rotation
+    // and the motor gear ratio is 43.7:1
     // and the external gear ratio is 5:1
     // there is a 4 inch diameter on the motor shaft
-    return 4 * 3.14159 * getTeethEncoderCount() / (12 * 43.8 * 5);
+    return 4 * 3.14159 * getTeethEncoderCount() / (64 * 43.7 * 5);
 }
 
 int INTAKE_SPEED_PIN = 9;
@@ -117,7 +117,7 @@ enum INTAKE_STATE
 {
     INTAKE_IDLE = 0,
     INTAKE_SEND = 1,    // sending a disc out of the intake onto the conveyor
-    INTAKE_RECIEVE = 2, // getting a disc from the top conveyor into the intake
+    INTAKE_RECEIVE = 2, // getting a disc from the top conveyor into the intake
 };
 INTAKE_STATE intake_state = INTAKE_STATE::INTAKE_IDLE;
 
@@ -137,9 +137,11 @@ void stop_conveyor_motor()
 {
     analogWrite(CONVEYOR_SPEED_PIN, 0); // stop
     Serial.println("Conveyor motor stopped");
+    loginfo("Conveyor motor stopped");
 }
 
 void start_teeth_motor(int speed = 80) {
+    loginfo("start_teeth_motor()");
     digitalWrite(TEETH_INVERT_PIN, HIGH);
     analogWrite(TEETH_SPEED_PIN, speed);
     Serial.println("Teeth motor started");
@@ -152,23 +154,23 @@ void stop_teeth_motor() {
 
 void handle_teeth_conveyor_coordination()
 {
-    if (intake_state != INTAKE_STATE::INTAKE_RECIEVE)
-        return;
-
-    float conveyorPosition = getConveyorPosition();
-    float teethPosition = getTeethPosition();
-
-    if (teethPosition > conveyorPosition) 
+    if (intake_state == INTAKE_STATE::INTAKE_RECEIVE) 
     {
-        Serial.println("teeth motor > conveyor motor");
-        start_conveyor_motor();
-        stop_teeth_motor();
-    }
-    else 
-    {
-        Serial.println("teeth motor < conveyor motor");
-        stop_conveyor_motor();
-        start_teeth_motor();
+        float conveyorPosition = getConveyorPosition();
+        float teethPosition = getTeethPosition();
+
+        if (teethPosition > conveyorPosition) 
+        {
+            Serial.println("teeth motor > conveyor motor");
+            start_conveyor_motor();
+            stop_teeth_motor();
+        }
+        else 
+        {
+            Serial.println("teeth motor < conveyor motor");
+            stop_conveyor_motor();
+            start_teeth_motor();
+        }
     }
 }
 
@@ -191,8 +193,6 @@ void stop_intake_motor()
 void handle_intake_start()
 {
     loginfo("start_intake");
-    start_conveyor_motor();
-    start_teeth_motor();
     start_intake_motor();
     moved_to_INTAKE_RELEASE_time = millis();
     intake_state = INTAKE_STATE::INTAKE_SEND;
@@ -225,7 +225,9 @@ void handle_intake_timer()
     if (intake_state == INTAKE_STATE::INTAKE_SEND)
     {
         stop_intake_motor();
-        intake_state = INTAKE_STATE::INTAKE_RECIEVE;
+        start_conveyor_motor();
+        start_teeth_motor();
+        intake_state = INTAKE_STATE::INTAKE_RECEIVE;
     }
 }
 
@@ -253,7 +255,7 @@ bool check_beam_break()
 
 void handle_beam_break()
 {
-    if (intake_state == INTAKE_STATE::INTAKE_RECIEVE)
+    if (intake_state == INTAKE_STATE::INTAKE_RECEIVE)
     {
         stop_conveyor_motor();
         stop_teeth_motor();
